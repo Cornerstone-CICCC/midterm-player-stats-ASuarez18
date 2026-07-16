@@ -84,3 +84,13 @@ export type Performance = {
   consistency_score?: string | number;
   clutch_performance_score?: string | number;
 }
+
+export type RankingRow = {
+  rank?: number;
+  player_name: string;
+  team: string;
+  matches_played: number;
+  total_goals: number;
+  total_assists: number;
+  avg_rating: number;
+}

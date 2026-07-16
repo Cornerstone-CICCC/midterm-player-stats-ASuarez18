@@ -2,18 +2,16 @@ import pg from "pg";
 import dotenv from "dotenv";
 import path from "path";
 
-// const __dirname = path.dirname(new URL(import.meta.url).pathname);
-
-// dotenv.config({ path: path.join(__dirname, "..", ".env") });
+// dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 const { Pool } = pg;
 
 export const pool = new Pool({
-  user: "postgres",
-  password: "",
-  host: "localhost",
-  port: 5432,
-  database: "player_performance",
+  user: process.env.DB_USER || "postgres",
+  password: process.env.DB_PASSWORD || "",
+  host: process.env.DB_HOST || "localhost",
+  port: Number(process.env.DB_PORT) || 5432,
+  database: process.env.DB_DATABASE || "player_performance",
 });
 
 pool.on("error", (err) => {

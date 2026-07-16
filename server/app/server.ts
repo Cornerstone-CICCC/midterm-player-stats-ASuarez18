@@ -2,7 +2,10 @@ import express from "express";
 import cors from "cors";
 
 // routes imports
-// import todosRoutes from "./routes/todosRoutes.ts";
+import performancesRoutes from "./routes/performancesRoutes.ts";
+import rankingsRoutes from "./routes/rankingsRoutes.ts";
+import playersRoutes from "./routes/playersRoutes.ts";
+import matchesRoutes from "./routes/matchesRoutes.ts";
 
 const app = express();
 
@@ -10,7 +13,10 @@ app.use(cors({ origin: "http://localhost:4321" }));
 app.use(express.json());
 
 // routes
-// app.use("/todos", todosRoutes);
+app.use("/api/performances", performancesRoutes);
+app.use("/api/rankings", rankingsRoutes);
+app.use("/api/players", playersRoutes);
+app.use("/api/matches", matchesRoutes);
 
 const PORT = process.env.PORT || 3000;
 
