@@ -1,0 +1,252 @@
+---
+// > Rankings Page
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Rankings">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+      <h2 class="text-3xl font-bold tracking-tight text-slate-900">Rankings</h2>
+      <p class="text-slate-500 mt-1">Explore the top players in World Cup 2026 across key performance metrics.</p>
+    </div>
+
+    <div class="flex items-center gap-3 self-end sm:self-auto">
+      <label for="sort-select" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Sort by</label>
+      <select
+        id="sort-select"
+        class="bg-white border border-slate-200 text-slate-700 py-2.5 px-4 pr-10 rounded-xl text-sm font-semibold shadow-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 focus:outline-hidden transition-all cursor-pointer"
+      >
+        <option value="goals" selected>Goals</option>
+        <option value="assists">Assists</option>
+        <option value="rating">Rating</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ! ERROR Banner if server fails -->
+  <div id="error-banner" class="hidden bg-rose-50 border border-rose-100 text-rose-700 p-6 rounded-2xl items-center gap-4 shadow-xs mb-6">
+    <div class="bg-rose-100 p-3 rounded-xl text-rose-600 shrink-0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <div>
+      <h4 class="font-bold">Backend Connection Error</h4>
+      <p id="error-text" class="text-sm text-rose-600/90 mt-1">Could not load rankings.</p>
+    </div>
+  </div>
+
+  <div class="bg-white border border-slate-100 rounded-3xl shadow-xs overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-left text-sm text-slate-600">
+        <thead>
+          <tr class="bg-slate-50/75 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <th class="px-6 py-4 text-center w-16">Rank</th>
+            <th class="px-6 py-4">Player</th>
+            <th class="px-6 py-4">Team</th>
+            <th class="px-6 py-4 text-center">Matches Played</th>
+            <th id="th-goals" class="px-6 py-4 text-center transition-colors duration-200">Total Goals</th>
+            <th id="th-assists" class="px-6 py-4 text-center transition-colors duration-200">Total Assists</th>
+            <th id="th-rating" class="px-6 py-4 text-center w-32 transition-colors duration-200">Rating</th>
+          </tr>
+        </thead>
+        <tbody id="rankings-tbody" class="divide-y divide-slate-100/60">
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const sortSelect = document.getElementById("sort-select") as HTMLSelectElement;
+  const tbody = document.getElementById("rankings-tbody");
+  const errorBanner = document.getElementById("error-banner");
+  const errorText = document.getElementById("error-text");
+
+  /** 
+   * @function getFlagEmoji
+   * @description Returns the flag emoji for a given country name. If the country is not found, returns a default white flag.
+   * @param {string} country - The name of the country.
+   * @returns {string} - The corresponding flag emoji or a default white flag.
+   * TODO: Search API that gets all country flags and their emojis, so we don't have to hardcode them here.
+   */
+  const getFlagEmoji = (country: string): string => {
+    const flags: Record<string, string> = {
+      Spain: "🇪🇸",
+      France: "🇫🇷",
+      Argentina: "🇦🇷",
+      England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+      Portugal: "🇵🇹",
+      Netherlands: "🇳🇱",
+      Germany: "🇩🇪",
+      Brazil: "🇧🇷",
+      Belgium: "🇧🇪",
+      Mexico: "🇲🇽",
+      USA: "🇺🇸",
+      "South Africa": "🇿🇦",
+      Canada: "🇨🇦"
+    };
+    return flags[country] || "🏳️";
+  };
+
+  /**
+   * @function getInitials
+   * @description Returns the initials of a given name. For PFP of players without images.
+   * @param name - The full name of the player.
+   * @returns The initials of the name in uppercase.
+   */
+  const getInitials = (name: string): string => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  };
+
+  /**
+   * @function getRatingColorClass
+   * @description Returns a Tailwind CSS class string based on the player's rating.
+   * @param rating - The average rating of the player.
+   * @returns A string containing Tailwind CSS classes for background color, text color, font weight, and border based on the rating.
+   * - Green for ratings >= 7.5
+   * - Amber for ratings >= 6.5 and < 7.5
+   * - Rose for ratings < 6.5
+   */
+  const getRatingColorClass = (rating: number): string => {
+    if (rating >= 7.5) return "bg-green-100 text-green-700 font-bold border border-green-200";
+    if (rating >= 6.5) return "bg-amber-100 text-amber-700 font-bold border border-amber-200";
+    return "bg-rose-100 text-rose-700 font-bold border border-rose-200";
+  };
+
+    /**
+   * @function updateHeadersHighlight
+   * @description Updates the table header styles to highlight the currently selected sorting column.
+   * @param sortBy - The criteria by which the rankings are currently sorted (e.g., "goals", "assists", "rating").
+   * This function modifies the class names of the header elements to visually indicate which column is active
+   */
+  function updateHeadersHighlight(sortBy: string) {
+    const thGoals = document.getElementById("th-goals");
+    const thAssists = document.getElementById("th-assists");
+    const thRating = document.getElementById("th-rating");
+
+    if (thGoals) thGoals.className = `px-6 py-4 text-center transition-colors duration-200 ${sortBy === "goals" ? "text-blue-600 font-bold" : "text-slate-400"}`;
+    if (thAssists) thAssists.className = `px-6 py-4 text-center transition-colors duration-200 ${sortBy === "assists" ? "text-blue-600 font-bold" : "text-slate-400"}`;
+    if (thRating) thRating.className = `px-6 py-4 text-center w-32 transition-colors duration-200 ${sortBy === "rating" ? "text-blue-600 font-bold" : "text-slate-400"}`;
+  }
+
+  /**
+   * @function loadRankings
+   * @description Fetches player rankings from the backend API based on the selected sorting criteria and dynamically updates the table in the DOM. 
+   * @param sortBy - The criteria by which to sort the rankings (e.g., "goals", "assists", "rating").
+   * @returns {Promise<void>} - A promise that resolves when the rankings have been loaded
+   */
+  async function loadRankings(sortBy: string) {
+    if (!tbody) return;
+
+    // 1. Show loading spinner while fetching data
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">
+          <div class="flex items-center justify-center gap-3">
+            <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Loading rankings...</span>
+          </div>
+        </td>
+      </tr>
+    `;
+    
+    errorBanner?.classList.add("hidden");
+
+    try {
+      // 2. Consume the backend API to fetch rankings based on the selected sort criteria
+      const response = await fetch(`http://localhost:3000/api/rankings?sortBy=${sortBy}`);
+      if (!response.ok) throw new Error("API returned an error");
+      
+      const rankings = await response.json();
+      tbody.innerHTML = ""; // Limpiar spinner
+
+      if (rankings.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">
+              No ranking records available.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      // 3. Render the table rows dynamically based on the fetched data
+      rankings.forEach((row: any) => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/40 transition-colors border-b border-slate-100 last:border-0";
+
+        // Emphasis classes for the selected sorting column
+        const goalsStyle = sortBy === "goals" ? "text-blue-600 font-bold text-base" : "text-slate-700";
+        const assistsStyle = sortBy === "assists" ? "text-blue-600 font-bold text-base" : "text-slate-700";
+
+        tr.innerHTML = `
+          <td class="px-6 py-4 text-center font-bold text-slate-800">${row.rank}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 font-semibold text-xs flex items-center justify-center shrink-0 border border-slate-100 uppercase shadow-xs">
+                ${getInitials(row.player_name)}
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-900 leading-tight">${row.player_name}</h3>
+                <div class="flex items-center gap-1.5 mt-0.5 text-xs text-slate-400 font-medium md:hidden">
+                  <span>${getFlagEmoji(row.team)}</span>
+                  <span>${row.team}</span>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 font-semibold text-slate-700 hidden md:table-cell">
+            <div class="flex items-center gap-2">
+              <span>${getFlagEmoji(row.team)}</span>
+              <span>${row.team}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-center font-semibold text-slate-700">${row.matches_played}</td>
+          <td class="px-6 py-4 text-center ${goalsStyle}">${row.total_goals}</td>
+          <td class="px-6 py-4 text-center ${assistsStyle}">${row.total_assists}</td>
+          <td class="px-6 py-4 text-center">
+            <span class="inline-block px-3 py-1.5 rounded-xl text-xs ${getRatingColorClass(row.avg_rating)}">
+              ${row.avg_rating.toFixed(2)}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // 4. Update the header styles to highlight the selected sorting column
+      updateHeadersHighlight(sortBy);
+
+    } catch (error) {
+      console.error("Error loading rankings:", error);
+      tbody.innerHTML = "";
+      if (errorBanner && errorText) {
+        errorBanner.classList.remove("hidden");
+        errorText.textContent = "Could not connect to the backend server. Make sure your Express app is running on port 3000.";
+      }
+    }
+  }
+
+
+  if (sortSelect) {
+    // On change event for the sort select dropdown to reload rankings based on the selected criteria
+    sortSelect.addEventListener("change", (e) => {
+      const target = e.target as HTMLSelectElement;
+      loadRankings(target.value);
+    });
+
+    // Load initial rankings based on the default selected value when the page loads
+    loadRankings(sortSelect.value);
+  }
+</script>
