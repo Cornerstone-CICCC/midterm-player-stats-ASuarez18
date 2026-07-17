@@ -34,7 +34,7 @@ const ALLOWED_PLAYER_COLUMNS = [
  */
 export async function getAll(): Promise<Player[]> {
   const query = `
-    SELECT player_id, player_name, team, position, jersey_number 
+    SELECT player_id, player_name, team, position, jersey_number, age, club_name 
     FROM players 
     ORDER BY player_name ASC
   `;

@@ -1,0 +1,95 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Players">
+  <!-- CABECERA -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+      <h2 class="text-3xl font-bold tracking-tight text-slate-900">Players</h2>
+      <p class="text-slate-500 mt-1">Manage the tournament roster and player information.</p>
+    </div>
+
+    <!-- BOTÓN AGREGAR -->
+    <a
+      href="/players/create"
+      class="inline-flex items-center justify-center gap-2 bg-[#2563eb] hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl text-sm shadow-md shadow-blue-500/10 hover:shadow-lg transition-all"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="16" y1="11" x2="22" y2="11"></line>
+      </svg>
+      Add Player
+    </a>
+  </div>
+
+  <!-- LISTA DE JUGADORES -->
+  <div class="bg-white border border-slate-100 rounded-3xl shadow-xs overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-left text-sm text-slate-600">
+        <thead>
+          <tr class="bg-slate-50/75 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <th class="px-6 py-4">Player</th>
+            <th class="px-6 py-4">Team</th>
+            <th class="px-6 py-4 hidden sm:table-cell">Position</th>
+            <th class="px-6 py-4 text-center hidden md:table-cell">Jersey</th>
+            <th class="px-6 py-4 text-center hidden md:table-cell">Age</th>
+            <th class="px-6 py-4 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="players-tbody" class="divide-y divide-slate-100/60">
+          <!-- Renderizado dinámico -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const tbody = document.getElementById("players-tbody");
+
+  const getInitials = (name: string) => name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+
+  async function loadPlayers() {
+    if (!tbody) return;
+    
+    try {
+      const response = await fetch("http://localhost:3000/api/players");
+      const players = await response.json();
+      
+      tbody.innerHTML = "";
+      
+      players.forEach((p: any) => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/40 transition-colors";
+        
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center border border-slate-200">
+                ${getInitials(p.player_name)}
+              </div>
+              <span class="font-bold text-slate-900">${p.player_name}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-slate-700 font-medium">${p.team || "—"}</td>
+          <td class="px-6 py-4 text-slate-600 hidden sm:table-cell">${p.position || "—"}</td>
+          <td class="px-6 py-4 text-center hidden md:table-cell text-slate-600 font-mono">#${p.jersey_number || "—"}</td>
+          <td class="px-6 py-4 text-center hidden md:table-cell text-slate-600">${p.age || "—"}</td>
+          <td class="px-6 py-4 text-center">
+            <div class="flex items-center justify-center gap-2">
+              <a href="/players/edit/${p.player_id}" class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+              </a>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-rose-500">Error loading players</td></tr>`;
+    }
+  }
+
+  loadPlayers();
+</script>
