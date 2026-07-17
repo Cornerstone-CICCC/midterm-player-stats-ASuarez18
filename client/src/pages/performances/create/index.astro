@@ -359,13 +359,18 @@ import Layout from "../../../layouts/Layout.astro";
    */
   const showNotification = (message: string, isError: boolean) => {
     if (!banner || !bannerText || !bannerIcon) return;
+    
     banner.className = `p-4 mb-6 rounded-xl flex items-center gap-3 shadow-xs text-sm font-semibold transition-all ${isError ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-green-50 text-green-700 border border-green-200'}`;
     bannerText.textContent = message;
     bannerIcon.innerHTML = isError 
       ? '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' 
       : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
     banner.classList.remove("hidden");
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    const mainContainer = document.querySelector("main");
+      if (mainContainer) {
+        mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // --- > REALTIME COLORING OF RATING INPUTS ---
@@ -459,6 +464,30 @@ import Layout from "../../../layouts/Layout.astro";
     }
   }
 
+  // --- > STRICT INPUT VALIDATION FOR NUMBER FIELDS ---
+  const allNumberInputs = document.querySelectorAll<HTMLInputElement>('input[type="number"]');
+
+  allNumberInputs.forEach(input => {
+    // 1. Block negative numbers from being typed using the keyboard and scientific notation (e.g., "e" or "E")
+    input.addEventListener('keydown', (e) => {
+      if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+      }
+    });
+
+    // 2. Ensure that if a negative number is pasted or entered, it resets to 0 and updates the color if it's a rating input
+    input.addEventListener('input', () => {
+      const val = parseFloat(input.value);
+      if (val < 0) {
+        input.value = "0";
+        // If input is 
+        if (input.hasAttribute('data-scale')) {
+          updateInputColor(input);
+        }
+      }
+    });
+  });
+
   // --- > SELECT CHANGE EVENTS ---
   /**
    * @function handleSelectChange
@@ -520,7 +549,7 @@ import Layout from "../../../layouts/Layout.astro";
     
     for (const [key, value] of formData.entries()) {
       if (value !== "") {
-        // Validation: Convert numeric fields to numbers, keep others as strings
+        // Verify if field is number
         if (
           key !== "player_id" && 
           key !== "match_id" && 
@@ -528,7 +557,20 @@ import Layout from "../../../layouts/Layout.astro";
           key !== "opponent_team" && 
           !isNaN(Number(value))
         ) {
-          payload[key] = Number(value);
+          const parsedValue = Number(value);
+
+          // 3. Payload validation: Ensure that no negative values are sent to the backend
+          if (parsedValue < 0) {
+            const readableName = key.replace(/_/g, ' ').toUpperCase();
+            showNotification(`Validation Error: ${readableName} cannot be a negative value.`, true);
+            
+            // Restore the submit button state to allow user to correct the input
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = "Save Performance";
+            return; // Stops the submission process if a negative value is detected
+          }
+
+          payload[key] = parsedValue;
         } else {
           payload[key] = value;
         }
