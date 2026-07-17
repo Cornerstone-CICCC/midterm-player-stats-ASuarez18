@@ -27,19 +27,68 @@ const ALLOWED_PLAYER_COLUMNS = [
   "tournament_rating",
 ];
 
+export type  GetPlayersOptions = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export type  PaginatedPlayers = {
+  data: Player[];
+  total: number;
+}
+
 /**
  * @function getAll
- * @description Obtains all players ordered by name (useful for dropdowns)
- * @returns {Promise<Player[]>} - An array of player objects
+ * @description Obtains players with support for dynamic sorting, search filtering, and pagination.
+ *              If no options are provided, it returns a flat array (dropdowns).
+ * @param {GetPlayersOptions} [options] - Pagination, search, and sorting rules
+ * @returns {Promise<Player[] | PaginatedPlayers>} - Array of players or Paginated structure
  */
-export async function getAll(): Promise<Player[]> {
-  const query = `
-    SELECT player_id, player_name, team, position, jersey_number, age, club_name 
-    FROM players 
-    ORDER BY player_name ASC
+export async function getAll(options?: GetPlayersOptions): Promise<Player[] | PaginatedPlayers> {
+  const page = options?.page ? parseInt(options.page as any, 10) : null;
+  const limit = options?.limit ? parseInt(options.limit as any, 10) : null;
+  const search = options?.search ? options.search.trim() : "";
+  const sortBy = options?.sortBy || "player_name";
+  const sortOrder = options?.sortOrder === "DESC" ? "DESC" : "ASC";
+
+  const validatedSortBy = ALLOWED_PLAYER_COLUMNS.includes(sortBy) ? sortBy : "player_name";
+
+  let query = `
+    SELECT *, COUNT(*) OVER() as total_count
+    FROM players
   `;
-  const { rows } = await pool.query(query);
-  return rows;
+  
+  const values: any[] = [];
+
+  if (search) {
+    query += ` WHERE player_name ILIKE $1 OR team ILIKE $1 `;
+    values.push(`%${search}%`);
+  }
+
+  query += ` ORDER BY ${validatedSortBy} ${sortOrder} `;
+
+  if (limit && page) {
+    const offset = (page - 1) * limit;
+    const limitPlaceholder = `$${values.length + 1}`;
+    const offsetPlaceholder = `$${values.length + 2}`;
+    
+    query += ` LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder} `;
+    values.push(limit, offset);
+  }
+
+  const { rows } = await pool.query(query, values);
+
+  if (!limit || !page) {
+    return rows.map(({ total_count, ...player }) => player as Player);
+  }
+
+  const total = rows.length > 0 ? parseInt(rows[0].total_count, 10) : 0;
+  const data = rows.map(({ total_count, ...player }) => player as Player);
+
+  return { data, total };
 }
 
 /**
