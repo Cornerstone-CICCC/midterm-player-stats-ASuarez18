@@ -1,0 +1,685 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Edit Performance">
+  <!-- > HEADER -->
+  <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <a href="/" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Performances
+      </a>
+      <h2 class="text-3xl font-bold tracking-tight text-slate-900">Edit Performance</h2>
+    </div>
+
+    <!-- - Delete Performance Button -->
+    <button
+      type="button"
+      id="delete-btn"
+      class="inline-flex items-center justify-center gap-2 border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 font-semibold py-2.5 px-5 rounded-xl text-sm transition-all shadow-xs self-start sm:self-center cursor-pointer"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      </svg>
+      Delete Record
+    </button>
+  </div>
+
+  <!-- > NOTIFICATION TOAST -->
+  <div id="notification-banner" class="hidden p-4 mb-6 rounded-xl flex items-center gap-3 shadow-xs text-sm font-semibold transition-all">
+    <svg id="notification-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"></svg>
+    <span id="notification-text"></span>
+  </div>
+
+  <!-- > LOADING PERFORMANCE CONTEXT CARD -->
+  <div id="loading-context-skeleton" class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs mb-6 animate-pulse flex items-center justify-center py-12 text-slate-400 font-medium">
+    Loading performance context...
+  </div>
+
+  <div id="metadata-context-card" class="hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-xs mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+      
+      <!-- - Player Profile Data -->
+      <div class="flex items-center gap-4 pb-4 md:pb-0">
+        <div id="ctx-player-avatar" class="w-16 h-16 rounded-full bg-linear-to-br from-slate-100 to-slate-200 text-slate-600 font-bold text-xl flex items-center justify-center border border-slate-100 uppercase shrink-0">
+          —
+        </div>
+        <div>
+          <h3 id="ctx-player-name" class="text-xl font-bold text-slate-900 leading-tight">—</h3>
+          <p id="ctx-player-meta" class="text-xs text-slate-500 font-semibold mt-1.5">—</p>
+          <div id="ctx-player-country" class="flex items-center gap-1.5 mt-2 text-sm font-bold text-slate-700"></div>
+        </div>
+      </div>
+      
+      <!-- - Match Data -->
+      <div class="flex flex-col justify-center px-0 md:px-6 py-4 md:py-0 gap-3">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-slate-50 text-slate-400 border border-slate-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Match</span>
+            <span id="ctx-match-teams" class="text-sm font-bold text-slate-800">—</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-slate-50 text-slate-400 border border-slate-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Date</span>
+            <span id="ctx-match-date" class="text-sm font-semibold text-slate-600">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- - Stadium & Result Data -->
+      <div class="flex flex-col justify-center px-0 md:px-6 pt-4 md:pt-0 gap-3">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-slate-50 text-slate-400 border border-slate-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Stadium</span>
+            <span id="ctx-match-stadium" class="text-sm font-semibold text-slate-700">—</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-slate-50 text-slate-400 border border-slate-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Result</span>
+            <span id="ctx-match-result" class="inline-block px-2.5 py-0.5 rounded-md text-xs font-bold mt-0.5">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form id="edit-performance-form" class="space-y-6 pb-28">
+    <!-- IDS needed for api call -->
+    <input type="hidden" name="player_id" id="hidden_player_id" />
+    <input type="hidden" name="match_id" id="hidden_match_id" />
+
+    <!-- > MATCH EDITABLE DATA -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+      <!-- <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">Editable Match Roster & Context</h3> -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Opponent Team</label>
+          <input type="text" name="opponent_team" required class="w-full border border-slate-200 py-2 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Match Result</label>
+          <select name="match_result" required class="w-full border border-slate-200 py-2.5 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700 cursor-pointer">
+            <option value="W">Win (W)</option>
+            <option value="D">Draw (D)</option>
+            <option value="L">Loss (L)</option>
+          </select>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Team Goals</label>
+          <input type="number" name="goals_team" required class="w-full border border-slate-200 py-2 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Opponent Goals</label>
+          <input type="number" name="goals_opponent" required class="w-full border border-slate-200 py-2 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+        </div>
+      </div>
+    </div>
+
+    <!-- > METRICS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- - Attack -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+            Attacking Stats
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[
+              { id: "goals", label: "Goals" },
+              { id: "assists", label: "Assists" },
+              { id: "shots", label: "Shots" },
+              { id: "shots_on_target", label: "On Target" },
+              { id: "expected_goals_xg", label: "xG", step: "0.01" },
+              { id: "expected_assists_xa", label: "xA", step: "0.01" },
+              { id: "key_passes", label: "Key Passes" },
+              { id: "total_passes", label: "Total Passes" },
+              { id: "successful_passes", label: "Succ. Passes" },
+              { id: "crosses", label: "Crosses" },
+              { id: "successful_crosses", label: "Succ. Crosses" },
+              { id: "dribbles_attempted", label: "Dribbles Att." },
+              { id: "successful_dribbles", label: "Succ. Dribbles" },
+              { id: "offsides", label: "Offsides" }
+            ].map(field => (
+              <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{field.label}</label>
+                <input type="number" step={field.step || "1"} name={field.id} class="w-full border border-slate-200 py-1.5 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- - Defense -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Defensive Stats
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[
+              { id: "tackles", label: "Tackles" },
+              { id: "interceptions", label: "Interceptions" },
+              { id: "clearances", label: "Clearances" },
+              { id: "blocks", label: "Blocks" },
+              { id: "recoveries", label: "Recoveries" },
+              { id: "defensive_actions", label: "Def. Actions" },
+              { id: "aerial_duels_won", label: "Duels Won" },
+              { id: "aerial_duels_lost", label: "Duels Lost" },
+              { id: "fouls_committed", label: "Fouls Com." },
+              { id: "fouls_suffered", label: "Fouls Drawn" },
+              { id: "yellow_cards", label: "Yellow Cards" },
+              { id: "red_cards", label: "Red Cards" }
+            ].map(field => (
+              <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{field.label}</label>
+                <input type="number" name={field.id} class="w-full border border-slate-200 py-1.5 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- - Physical -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+            Physical Metrics
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[
+              { id: "minutes_played", label: "Minutes" },
+              { id: "distance_covered_km", label: "Distance (km)", step: "0.01" },
+              { id: "sprint_distance_km", label: "Sprint (km)", step: "0.01" },
+              { id: "top_speed_kmh", label: "Top Speed", step: "0.01" },
+              { id: "accelerations", label: "Accelerations" },
+              { id: "decelerations", label: "Decelerations" },
+              { id: "stamina_score", label: "Stamina", step: "0.01" }
+            ].map(field => (
+              <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{field.label}</label>
+                <input type="number" step={field.step || "1"} name={field.id} class="w-full border border-slate-200 py-1.5 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- - Goalkeeper -->
+      <div id="goalkeeping-card" class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hidden">
+        <div>
+          <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M18.6 18.6L12 12l-6.6 6.6M12 12V2"></path></svg>
+            Goalkeeping Stats
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[
+              { id: "saves", label: "Saves" },
+              { id: "save_percentage", label: "Save %", step: "0.01" },
+              { id: "punches", label: "Punches" },
+              { id: "goals_conceded", label: "Goals Conceded" },
+              { id: "penalty_saves", label: "Penalty Saves" },
+              { id: "clean_sheet", label: "Clean Sheet" }
+            ].map(field => (
+              <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{field.label}</label>
+                <input type="number" step={field.step || "1"} name={field.id} class="w-full border border-slate-200 py-1.5 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- - Scores -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm lg:col-span-2">
+        <h3 class="font-bold text-slate-800 flex items-center gap-2 mb-5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          Performance Scores
+        </h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+          
+          <div class="flex flex-col gap-1">
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Match Rating (1-10)</label>
+            <input 
+              type="number" 
+              step="0.01" 
+              name="player_rating" 
+              data-scale="10" 
+              class="w-full py-2 px-3 rounded-lg text-sm font-bold focus:outline-hidden transition-all duration-200" 
+            />
+          </div>
+
+          {[
+            { id: "pass_accuracy", label: "Pass Acc. %" },
+            { id: "performance_score", label: "Perf. Score" },
+            { id: "offensive_contribution", label: "Offensive" },
+            { id: "defensive_contribution", label: "Defensive" },
+            { id: "possession_impact", label: "Poss. Impact" },
+            { id: "pressure_resistance", label: "Press. Resist" },
+            { id: "creativity_score", label: "Creativity" },
+            { id: "consistency_score", label: "Consistency" },
+            { id: "clutch_performance_score", label: "Clutch Perf." }
+          ].map(field => (
+            <div class="flex flex-col gap-1">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{field.label}</label>
+              <input 
+                type="number" 
+                step="any" 
+                name={field.id} 
+                data-scale="100" 
+                class="w-full py-2 px-3 rounded-lg text-sm font-bold focus:outline-hidden transition-all duration-200" 
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- > ACTIONS BUTTONS -->
+    <div class="fixed bottom-0 left-0 md:left-64 right-0 bg-white border-t border-slate-200 p-4 px-6 flex justify-end gap-3 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <button type="button" onclick="window.history.back()" class="px-6 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
+        Cancel
+      </button>
+      <button type="submit" id="submit-btn" class="px-8 py-2.5 text-sm font-semibold text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2 cursor-pointer">
+        Update Performance
+      </button>
+    </div>
+  </form>
+
+  <!-- >  DELETE CONFIRMATION MODAL -->
+  <div id="delete-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"></div>
+
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+      <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg p-6 space-y-4 border border-slate-100">
+        <div class="flex items-center gap-3 text-rose-600">
+          <div class="p-2 rounded-xl bg-rose-50 border border-rose-100 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900" id="modal-title">Delete Performance Record</h3>
+        </div>
+        
+        <p class="text-sm text-slate-500 font-medium leading-relaxed">
+          Are you sure you want to permanently delete this player performance record? This action is irreversible and will erase all data fields from the system index.
+        </p>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" id="modal-cancel-btn" class="px-4 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
+            Cancel
+          </button>
+          <button type="button" id="modal-confirm-btn" class="px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md shadow-rose-500/20 transition-colors cursor-pointer">
+            Delete Permanently
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // > --- DOM ELEMENTS ---
+  const form = document.getElementById("edit-performance-form") as HTMLFormElement;
+  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+  const deleteBtn = document.getElementById("delete-btn") as HTMLButtonElement;
+
+  // > --- MODAL ELEMENTS ---
+  const deleteModal = document.getElementById("delete-modal") as HTMLDivElement;
+  const modalCancelBtn = document.getElementById("modal-cancel-btn") as HTMLButtonElement;
+  const modalConfirmBtn = document.getElementById("modal-confirm-btn") as HTMLButtonElement;
+
+  // > --- CONTEXT ELEMENTS ---
+  const loadingSkeleton = document.getElementById("loading-context-skeleton");
+  const metadataCard = document.getElementById("metadata-context-card");
+  
+  const ctxPlayerAvatar = document.getElementById("ctx-player-avatar");
+  const ctxPlayerName = document.getElementById("ctx-player-name");
+  const ctxPlayerMeta = document.getElementById("ctx-player-meta");
+  const ctxPlayerCountry = document.getElementById("ctx-player-country");
+  
+  const ctxMatchTeams = document.getElementById("ctx-match-teams");
+  const ctxMatchDate = document.getElementById("ctx-match-date");
+  const ctxMatchStadium = document.getElementById("ctx-match-stadium");
+  const ctxMatchResult = document.getElementById("ctx-match-result");
+  const goalkeepingCard = document.getElementById("goalkeeping-card");
+
+  // > --- NOTIFICATION ELEMENTS ---
+  const banner = document.getElementById("notification-banner");
+  const bannerText = document.getElementById("notification-text");
+  const bannerIcon = document.getElementById("notification-icon");
+
+  // > --- URL PARAMS ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const performanceId = urlParams.get("id");
+
+  if (!performanceId) {
+    window.location.href = "/";
+  }
+
+  // > --- HELPER FUNCTIONS ---
+  // TODO: Refactor to utils.ts and import them for reusability across components.
+  /**
+   * @function getFlagEmoji
+   * @description Returns the corresponding flag emoji for a given country name.
+   * @param country - The name of the country (e.g., "Spain", "France").
+   * @returns The flag emoji as a string, or a white flag if the country is
+   * TODO: Add an API call to fetch flags dynamically instead of hardcoding them.
+   */
+  const getFlagEmoji = (country: string): string => {
+    const flags: Record<string, string> = {
+      Spain: "🇪🇸", France: "🇫🇷", Argentina: "🇦🇷", England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", Portugal: "🇵🇹", 
+      Netherlands: "🇳🇱", Germany: "🇩🇪", Brazil: "🇧🇷", Belgium: "🇧🇪", Mexico: "🇲🇽", 
+      USA: "🇺🇸", "South Africa": "🇿🇦", Canada: "🇨🇦", Australia: "🇦🇺", Iraq: "🇮🇶"
+    };
+    return flags[country] || "🏳️";
+  };
+
+  /**
+   * @function getInitials
+   * @description Returns the initials of a given name. For PFP of players without images.
+   * @param name - The full name of the player.
+   * @returns The initials of the name in uppercase.
+   */
+  const getInitials = (name: string): string => name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+  
+  /**
+   * @function formatDate
+   * @description Formats a date string into "DD MMM YYYY" format (e.g., "25 Dec 2023").
+   * @param dateStr - The date string to format (e.g., "2023-12-25").
+   * @returns The formatted date string.
+   */
+  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+  /**
+   * @function showNotification
+   * @description Displays a notification banner with a message and an icon indicating success or error.
+   * @param message - The message to display in the notification banner.
+   * @param isError - A boolean indicating whether the notification is an error (true) or success (false).
+   * @returns {void}
+   */
+  const showNotification = (message: string, isError: boolean) => {
+    if (!banner || !bannerText || !bannerIcon) return;
+    banner.className = `p-4 mb-6 rounded-xl flex items-center gap-3 shadow-xs text-sm font-semibold transition-all ${isError ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-green-50 text-green-700 border border-green-200'}`;
+    bannerText.textContent = message;
+    bannerIcon.innerHTML = isError 
+      ? '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' 
+      : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
+    banner.classList.remove("hidden");
+    
+    const mainContainer = document.querySelector("main");
+    if (mainContainer) mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // > --- DYNAMIC INPUT COLORING BASED ON VALUE ---
+  const ratingInputs = document.querySelectorAll<HTMLInputElement>('input[data-scale]');
+
+  /**
+   * @function updateInputColor
+   * @description Updates the background and text color of a rating input based on its value and scale.
+   * @param input - The HTMLInputElement whose color needs to be updated.
+   * @returns {void}
+   */
+  function updateInputColor(input: HTMLInputElement) {
+    const val = parseFloat(input.value) || 0;
+    const scale = input.getAttribute('data-scale');
+    
+    input.classList.remove(
+      'bg-green-50', 'text-green-700', 'border-green-200', 'focus:border-green-500', 'focus:ring-green-500/10',
+      'bg-amber-50', 'text-amber-700', 'border-amber-200', 'focus:border-amber-500', 'focus:ring-amber-500/10',
+      'bg-rose-50', 'text-rose-700', 'border-rose-200', 'focus:border-rose-500', 'focus:ring-rose-500/10',
+      'border-slate-200', 'text-slate-700'
+    );
+    
+    let colorClass = '';
+    if (scale === '10') {
+      if (val >= 7.5) colorClass = 'bg-green-50 text-green-700 border-green-200 focus:border-green-500 focus:ring-green-500/10';
+      else if (val >= 6.5) colorClass = 'bg-amber-50 text-amber-700 border-amber-200 focus:border-amber-500 focus:ring-amber-500/10';
+      else colorClass = 'bg-rose-50 text-rose-700 border-rose-200 focus:border-rose-500 focus:ring-rose-500/10';
+    } else {
+      if (val >= 75) colorClass = 'bg-green-50 text-green-700 border-green-200 focus:border-green-500 focus:ring-green-500/10';
+      else if (val >= 65) colorClass = 'bg-amber-50 text-amber-700 border-amber-200 focus:border-amber-500 focus:ring-amber-500/10';
+      else colorClass = 'bg-rose-50 text-rose-700 border-rose-200 focus:border-rose-500 focus:ring-rose-500/10';
+    }
+    input.className = `w-full border py-1.5 px-3 rounded-lg text-sm font-bold focus:ring-2 focus:outline-hidden transition-all duration-200 ${colorClass}`;
+  }
+
+  ratingInputs.forEach(input => {
+    input.addEventListener('input', () => updateInputColor(input));
+  });
+
+  // > --- PREVENT NEGATIVE VALUES IN NUMBER INPUTS ---
+  const allNumberInputs = document.querySelectorAll<HTMLInputElement>('input[type="number"]');
+  allNumberInputs.forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
+    });
+    input.addEventListener('input', () => {
+      if (parseFloat(input.value) < 0) {
+        input.value = "0";
+        if (input.hasAttribute('data-scale')) updateInputColor(input);
+      }
+    });
+  });
+
+  // > --- LOAD PERFORMANCE DATA FETCH ---
+  /**
+   * @function loadPerformanceData
+   * @description Fetches the performance data for the given performanceId and populates the form and context cards
+   * @returns {Promise<void>}
+   */
+  async function loadPerformanceData() {
+    try {
+      const response = await fetch(`http://localhost:3000/api/performances/${performanceId}`);
+      
+      if (!response.ok) {
+        throw new Error("The requested performance record does not exist or has been removed from the directory.");
+      }
+      
+      const data = await response.json();
+
+      // Fill hidden inputs for API PUT request
+      (document.getElementById("hidden_player_id") as HTMLInputElement).value = data.player_id;
+      (document.getElementById("hidden_match_id") as HTMLInputElement).value = data.match_id;
+      
+      // Prefill form fields with fetched data
+      Object.keys(data).forEach(field => {
+        const input = form.querySelector(`[name="${field}"]`) as HTMLInputElement | HTMLSelectElement;
+        if (input) {
+          input.value = data[field];
+          if (input instanceof HTMLInputElement && input.hasAttribute('data-scale')) {
+            updateInputColor(input);
+          }
+        }
+      });
+
+      // Populate context cards with fetched data
+      if (ctxPlayerAvatar) ctxPlayerAvatar.textContent = getInitials(data.player_name || "—");
+      if (ctxPlayerName) ctxPlayerName.textContent = data.player_name || "—";
+      if (ctxPlayerMeta) ctxPlayerMeta.textContent = `#${data.jersey_number || '—'} · ${data.position || '—'}`;
+      if (ctxPlayerCountry) {
+        ctxPlayerCountry.innerHTML = `<span>${getFlagEmoji(data.team)}</span> <span>${data.team || '—'}</span>`;
+      }
+
+      if (ctxMatchTeams) ctxMatchTeams.textContent = `${data.team || '—'} vs ${data.opponent_team || '—'}`;
+      if (ctxMatchDate) ctxMatchDate.textContent = data.match_date ? formatDate(data.match_date) : "—";
+      if (ctxMatchStadium) ctxMatchStadium.textContent = data.stadium || "—";
+      
+      if (ctxMatchResult) {
+        ctxMatchResult.textContent = `${data.match_result || '—'} ${data.goals_team ?? 0}-${data.goals_opponent ?? 0}`;
+        ctxMatchResult.className = `inline-block px-2.5 py-0.5 rounded-md text-xs font-bold mt-0.5 ${
+          data.match_result === 'W' ? 'bg-green-50 text-green-700 border border-green-200' :
+          data.match_result === 'D' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+          'bg-rose-50 text-rose-700 border border-rose-200'
+        }`;
+      }
+
+      if (data.position === "Goalkeeper") goalkeepingCard?.classList.remove("hidden");
+
+      // Hide loading skeleton and show metadata card after data is loaded
+      loadingSkeleton?.classList.add("hidden");
+      metadataCard?.classList.remove("hidden");
+
+    } catch (error: any) {
+      // console.error(error);
+      
+      showNotification(`${error.message} Redirecting to main dashboard page...`, true);
+      
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2500);
+    }
+  }
+
+  // > --- FORM SUBMISSION HANDLER ---
+  /**
+   * @function handleFormSubmit
+   * @description Handles the form submission for updating performance data
+   * @param e - The submit event object
+   * @returns {Promise<void>}
+   */
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "Updating...";
+
+    const formData = new FormData(form);
+    const payload: Record<string, any> = {};
+
+    for (const [key, value] of formData.entries()) {
+      if (value !== "") {
+        if (key !== "player_id" && key !== "match_id" && key !== "match_result" && key !== "opponent_team" && !isNaN(Number(value))) {
+          const parsedValue = Number(value);
+          if (parsedValue < 0) {
+            const readableName = key.replace(/_/g, ' ').toUpperCase();
+            showNotification(`Validation Error: ${readableName} cannot be negative.`, true);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = "Update Performance";
+            return;
+          }
+          payload[key] = parsedValue;
+        } else {
+          payload[key] = value;
+        }
+      }
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/performances/${performanceId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.details || errData.error || "Failed to update statistics.");
+      }
+
+      showNotification("Performance updated successfully!", false);
+      setTimeout(() => { window.location.href = "/"; }, 1200);
+
+    } catch (error: any) {
+      console.error(error);
+      showNotification(error.message, true);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = "Update Performance";
+    }
+  });
+
+  // > --- DELETE PERFORMANCE HANDLER ---
+
+  /**
+   * @function openDeleteModal
+   * @description Opens the delete confirmation modal when the delete button is clicked
+   */
+  deleteBtn?.addEventListener("click", () => {
+    deleteModal?.classList.remove("hidden");
+  });
+
+  /**
+   * @function closeDeleteModal
+   * @description Closes the delete confirmation modal when the cancel button is clicked
+   */
+  modalCancelBtn?.addEventListener("click", () => {
+    deleteModal?.classList.add("hidden");
+  });
+
+  /**
+   * @function closeDeleteModalOnOverlay
+   * @description Closes the delete confirmation modal when the user clicks anywhere on the dark overlay background
+   */
+  deleteModal?.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    
+    const isClickInsideCard = target.closest(".bg-white");
+    
+    if (!isClickInsideCard) {
+      deleteModal.classList.add("hidden");
+    }
+  });
+
+  /**
+   * @function confirmDeletePerformance
+   * @description Confirms the deletion of the performance record and sends a DELETE request to the API
+   * @returns {Promise<void>}
+   */
+  modalConfirmBtn?.addEventListener("click", async () => {
+    modalConfirmBtn.disabled = true;
+    modalConfirmBtn.innerHTML = "Deleting...";
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/performances/${performanceId}`, {
+        method: "DELETE"
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Failed to delete the record.");
+      }
+
+      // Close modal and show success notification before redirecting to main page
+      deleteModal?.classList.add("hidden");
+      showNotification("Record successfully deleted from database.", false);
+      setTimeout(() => { window.location.href = "/"; }, 1200);
+
+    } catch (error: any) {
+      console.error(error);
+      // Close modal and show error notification
+      deleteModal?.classList.add("hidden"); 
+      showNotification(error.message, true);
+      
+      // Restore modal confirm button state 
+      modalConfirmBtn.disabled = false;
+      modalConfirmBtn.innerHTML = "Delete Permanently";
+    }
+  });
+
+  // On page load, fetch and populate the performance data
+  loadPerformanceData();
+</script>

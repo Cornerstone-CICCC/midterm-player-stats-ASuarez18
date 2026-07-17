@@ -399,7 +399,7 @@ import Layout from "../layouts/Layout.astro";
   const applyFiltersBtn = document.getElementById("apply-filters-btn");
   const resetFiltersBtn = document.getElementById("reset-filters-btn");
 
-  // > --- Aesthetic Utility Functions ---
+  // > --- HELPER Functions ---
   // TODO: Refactor to utils.ts and import them for reusability across components.
   /**
    * @function getFlagEmoji
@@ -506,7 +506,7 @@ import Layout from "../layouts/Layout.astro";
           "hover:bg-slate-50/40 cursor-pointer transition-colors border-b border-slate-100";
         tr.addEventListener(
           "click",
-          () => (window.location.href = `/performances/edit/${row.id}`),
+          () => (window.location.href = `/performances/edit?id=${row.id}`),
         );
 
         tr.innerHTML = `
@@ -573,7 +573,7 @@ import Layout from "../layouts/Layout.astro";
   // --- Controladores del Modal de Filtros ---
   /**
    * @function toggleFiltersPanel
-   * @description Opens or closes the advanced filters panel with a backdrop
+   * @description Opens or closes the filters panel with a backdrop
    * @param open - A boolean indicating whether to open (true) or close (false) the filters panel.
    * @returns {void}
    */
@@ -644,7 +644,6 @@ import Layout from "../layouts/Layout.astro";
     });
   });
 
-  
   let debounceTimeout: any;
   /**
    * @function searchInput Event Listener
@@ -711,7 +710,8 @@ import Layout from "../layouts/Layout.astro";
       return btn;
     };
 
-    paginationControls.appendChild( // < Previous Button
+    paginationControls.appendChild(
+      // < Previous Button
       createBtn(
         state.page - 1,
         `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`,
@@ -720,8 +720,10 @@ import Layout from "../layouts/Layout.astro";
     );
 
     const pToShow = [];
-    if (totalPages <= 5) for (let i = 1; i <= totalPages; i++) pToShow.push(i); // Show all pages if total pages are 5 or less
-    else if (state.page <= 3) pToShow.push(1, 2, 3, "...", totalPages); // Show first 3 pages and ellipsis if current page is 3 or less
+    if (totalPages <= 5)
+      for (let i = 1; i <= totalPages; i++) pToShow.push(i); // Show all pages if total pages are 5 or less
+    else if (state.page <= 3)
+      pToShow.push(1, 2, 3, "...", totalPages); // Show first 3 pages and ellipsis if current page is 3 or less
     else if (state.page >= totalPages - 2)
       pToShow.push(1, "...", totalPages - 2, totalPages - 1, totalPages); // Show last 3 pages and ellipsis if current page is within the last 3 pages
     else pToShow.push(1, "...", state.page, "...", totalPages); // Show current page with ellipses on both sides if current page is in the middle
@@ -734,7 +736,8 @@ import Layout from "../layouts/Layout.astro";
           : createBtn(p as number, p.toString(), false, state.page === p), // Render page number button with active state if it matches the current page
       ),
     );
-    paginationControls.appendChild( // > Next Button
+    paginationControls.appendChild(
+      // > Next Button
       createBtn(
         state.page + 1,
         `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`,
