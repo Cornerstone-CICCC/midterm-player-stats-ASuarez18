@@ -1,12 +1,748 @@
 ---
-// Performances page
-import "../styles/global.css";
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="Performances">
-	<div class="p-6">
-		<h1 class="text-2xl font-bold mb-4">Player Performances</h1>
-		<p class="text-slate-600">Explore player performances in the World Cup 2026.</p>
-	</div>
+<Layout title="Player Performances">
+  <!-- > Header and buttons for searching/filter/adding -->
+  <div
+    class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8"
+  >
+    <div>
+      <h2 class="text-3xl font-bold tracking-tight text-slate-900">
+        Player Performances
+      </h2>
+      <p class="text-slate-500 mt-1">
+        Browse, search, and manage match-by-match statistics.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="relative w-full sm:w-64 md:w-72">
+        <span
+          class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search players..."
+          class="w-full bg-white border border-slate-200 text-slate-700 pl-10 pr-4 py-2.5 rounded-xl text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 focus:outline-hidden transition-all shadow-xs"
+        />
+      </div>
+
+      <button
+        id="open-filters-btn"
+        class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-slate-700 font-semibold py-2.5 px-4 rounded-xl text-sm shadow-xs transition-all"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"
+          ></polygon>
+        </svg>
+        Filters
+      </button>
+
+      <a
+        href="/performances/create"
+        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#2563eb] hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl text-sm shadow-md shadow-blue-500/10 hover:shadow-lg transition-all"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Add Performance
+      </a>
+    </div>
+  </div>
+
+  <!-- > Backend Error Banner -->
+  <div
+    id="error-banner"
+    class="hidden bg-rose-50 border border-rose-100 text-rose-700 p-6 rounded-2xl items-center gap-4 shadow-xs mb-6"
+  >
+    <div class="bg-rose-100 p-3 rounded-xl text-rose-600 shrink-0">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ><circle cx="12" cy="12" r="10"></circle><line
+          x1="12"
+          y1="8"
+          x2="12"
+          y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg
+      >
+    </div>
+    <div>
+      <h4 class="font-bold">Backend Connection Error</h4>
+      <p id="error-text" class="text-sm text-rose-600/90 mt-1">
+        Failed to fetch player stats.
+      </p>
+    </div>
+  </div>
+
+  <!-- > Entries limit & pagination -->
+  <div
+    class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+  >
+    <div class="flex items-center gap-2 text-sm text-slate-500 font-medium">
+      <span>Show</span>
+      <select
+        id="limit-select"
+        class="bg-white border border-slate-200 text-slate-700 py-1.5 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden transition-all cursor-pointer"
+      >
+        <option value="10">10</option>
+        <option value="25" selected>25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>entries</span>
+    </div>
+
+    <div class="flex items-center gap-4 self-end sm:self-auto">
+      <span
+        id="pagination-info"
+        class="text-xs sm:text-sm text-slate-500 font-medium"
+        >Loading entries...</span
+      >
+      <div id="pagination-controls" class="flex items-center gap-1.5"></div>
+    </div>
+  </div>
+
+  <!-- > Performance Table -->
+  <div
+    class="bg-white border border-slate-100 rounded-3xl shadow-xs overflow-hidden"
+  >
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-left text-sm text-slate-600">
+        <thead>
+          <tr
+            class="bg-slate-50/75 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400 select-none"
+          >
+            <th
+              class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors"
+              data-sort="player_name"
+            >
+              <div class="flex items-center gap-1">
+                Player <span class="sort-icon"></span>
+              </div>
+            </th>
+            <th
+              class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors hidden md:table-cell"
+              data-sort="team"
+            >
+              <div class="flex items-center gap-1">
+                Team <span class="sort-icon"></span>
+              </div>
+            </th>
+            <th
+              class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors hidden md:table-cell"
+              data-sort="opponent_team"
+            >
+              <div class="flex items-center gap-1">
+                Opponent <span class="sort-icon"></span>
+              </div>
+            </th>
+            <th
+              class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors"
+              data-sort="match_date"
+            >
+              <div class="flex items-center gap-1">
+                Match Date <span class="sort-icon">↓</span>
+              </div>
+            </th>
+            <th
+              class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors text-center"
+              data-sort="minutes_played"
+            >
+              <div class="flex items-center justify-center gap-1">
+                Min <span class="sort-icon"></span>
+              </div>
+            </th>
+            <th
+              class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors text-center"
+              data-sort="goals"
+            >
+              <div class="flex items-center justify-center gap-1">
+                Goals <span class="sort-icon"></span>
+              </div>
+            </th>
+            <th
+              class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors text-center"
+              data-sort="assists"
+            >
+              <div class="flex items-center justify-center gap-1">
+                Assists <span class="sort-icon"></span>
+              </div>
+            </th>
+            <th
+              class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors text-center hidden lg:table-cell"
+              data-sort="shots"
+            >
+              <div class="flex items-center justify-center gap-1">
+                Shots <span class="sort-icon"></span>
+              </div>
+            </th>
+            <th
+              class="px-6 py-4 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors text-center"
+              data-sort="player_rating"
+            >
+              <div class="flex items-center justify-center gap-1">
+                Rating <span class="sort-icon"></span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="performances-tbody" class="divide-y divide-slate-100/60">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- > Backdrop for advanced filters  -->
+  <div
+    id="filter-backdrop"
+    class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 hidden opacity-0 transition-opacity duration-300"
+  >
+  </div>
+
+  <!-- > Advanced Filter panel -->
+  <div
+    id="filter-panel"
+    class="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col"
+  >
+    <div
+      class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50"
+    >
+      <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="text-slate-500"
+          ><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"
+          ></polygon></svg
+        >
+        Advanced Filters
+      </h3>
+      <!-- Close panel button -->
+      <button
+        id="close-filters-btn"
+        class="text-slate-400 hover:text-slate-700 bg-white rounded-lg p-1.5 border border-slate-200 shadow-xs transition-colors cursor-pointer"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><line x1="18" y1="6" x2="6" y2="18"></line><line
+            x1="6"
+            y1="6"
+            x2="18"
+            y2="18"></line></svg
+        >
+      </button>
+    </div>
+
+    <div class="p-6 flex-1 overflow-y-auto space-y-6">
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2"
+          >Sort by Attribute</label
+        >
+        <select
+          id="filter-sort-by"
+          class="w-full bg-white border border-slate-200 text-slate-700 py-2.5 px-4 rounded-xl text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 focus:outline-hidden transition-all shadow-xs cursor-pointer"
+        >
+          <option value="match_date">Match Date</option>
+          <option value="player_name">Player Name</option>
+          <option value="team">Team / Nation</option>
+          <option value="minutes_played">Minutes Played</option>
+          <option value="goals">Goals Scored</option>
+          <option value="assists">Assists</option>
+          <option value="shots">Total Shots</option>
+          <option value="pass_accuracy">Pass Accuracy</option>
+          <option value="player_rating">Overall Rating</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2"
+          >Sorting Direction</label
+        >
+        <div class="grid grid-cols-2 gap-3">
+          <label class="cursor-pointer">
+            <input
+              type="radio"
+              name="sort-order"
+              value="DESC"
+              class="peer sr-only"
+              checked
+            />
+            <div
+              class="text-center py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 transition-all shadow-xs peer-checked:shadow-none"
+            >
+              High to Low (↓)
+            </div>
+          </label>
+          <label class="cursor-pointer">
+            <input
+              type="radio"
+              name="sort-order"
+              value="ASC"
+              class="peer sr-only"
+            />
+            <div
+              class="text-center py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 transition-all shadow-xs peer-checked:shadow-none"
+            >
+              Low to High (↑)
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
+      <button
+        id="reset-filters-btn"
+        class="flex-1 bg-white border border-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+      >
+        Reset
+      </button>
+      <button
+        id="apply-filters-btn"
+        class="flex-1 bg-[#2563eb] text-white font-semibold py-2.5 rounded-xl text-sm hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20 cursor-pointer"
+      >
+        Apply Filters
+      </button>
+    </div>
+  </div>
 </Layout>
+
+<script>
+  // > --- Global state for pagination, search, and sorting ---
+  let state = {
+    page: 1,
+    limit: 25,
+    search: "",
+    sortBy: "match_date",
+    sortOrder: "DESC" as "ASC" | "DESC",
+  };
+
+  // > --- General Element References ---
+  const tbody = document.getElementById("performances-tbody");
+  const searchInput = document.getElementById(
+    "search-input",
+  ) as HTMLInputElement;
+  const limitSelect = document.getElementById(
+    "limit-select",
+  ) as HTMLSelectElement;
+  const paginationInfo = document.getElementById("pagination-info");
+  const paginationControls = document.getElementById("pagination-controls");
+
+  // > --- Filter Modal Element References ---
+  const openFiltersBtn = document.getElementById("open-filters-btn");
+  const closeFiltersBtn = document.getElementById("close-filters-btn");
+  const filterBackdrop = document.getElementById("filter-backdrop");
+  const filterPanel = document.getElementById("filter-panel");
+  const filterSortBy = document.getElementById(
+    "filter-sort-by",
+  ) as HTMLSelectElement;
+  const applyFiltersBtn = document.getElementById("apply-filters-btn");
+  const resetFiltersBtn = document.getElementById("reset-filters-btn");
+
+  // > --- Aesthetic Utility Functions ---
+  // TODO: Refactor to utils.ts and import them for reusability across components.
+  /**
+   * @function getFlagEmoji
+   * @description Returns the corresponding flag emoji for a given country name.
+   * @param country - The name of the country (e.g., "Spain", "France").
+   * @returns The flag emoji as a string, or a white flag if the country is
+   * TODO: Add an API call to fetch flags dynamically instead of hardcoding them.
+   */
+  const getFlagEmoji = (country: string): string => {
+    const flags: Record<string, string> = {
+      Spain: "🇪🇸",
+      France: "🇫🇷",
+      Argentina: "🇦🇷",
+      England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+      Portugal: "🇵🇹",
+      Netherlands: "🇳🇱",
+      Germany: "🇩🇪",
+      Brazil: "🇧🇷",
+      Belgium: "🇧🇪",
+      Mexico: "🇲🇽",
+      USA: "🇺🇸",
+      "South Africa": "🇿🇦",
+      Canada: "🇨🇦",
+    };
+    return flags[country] || "🏳️";
+  };
+
+  /**
+   * @function getInitials
+   * @description Returns the initials of a given name. For PFP of players without images.
+   * @param name - The full name of the player.
+   * @returns The initials of the name in uppercase.
+   */
+  const getInitials = (name: string): string =>
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+
+  /**
+   * @function getRatingColorClass
+   * @description Returns a Tailwind CSS class string based on the player's rating.
+   * @param rating - The average rating of the player.
+   * @returns A string containing Tailwind CSS classes for background color, text color, font weight, and border based on the rating.
+   * - Green for ratings >= 7.5
+   * - Amber for ratings >= 6.5 and < 7.5
+   * - Rose for ratings < 6.5
+   */
+  const getRatingColorClass = (rating: number): string =>
+    rating >= 7.5
+      ? "bg-green-100 text-green-700 border-green-200"
+      : rating >= 6.5
+        ? "bg-amber-100 text-amber-700 border-amber-200"
+        : "bg-rose-100 text-rose-700 border-rose-200";
+
+  /**
+   * @function formatDate
+   * @description Formats a date string into "DD MMM YYYY" format (e.g., "25 Dec 2023").
+   * @param dateStr - The date string to format (e.g., "2023-12-25").
+   * @returns The formatted date string.
+   */
+  const formatDate = (dateStr: string): string =>
+    new Date(dateStr).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+  // > --- Data Fetch and Load ---
+  async function fetchPerformances() {
+    if (!tbody) return;
+
+    // > Show loading spinner while fetching data
+    tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-slate-400 font-medium"><div class="flex items-center justify-center gap-3"><svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Loading...</span></div></td></tr>`;
+
+    try {
+      // URL construction with query parameters for pagination, search, and sorting
+      const url = new URL("http://localhost:3000/api/performances");
+      url.searchParams.set("page", state.page.toString());
+      url.searchParams.set("limit", state.limit.toString());
+      if (state.search) url.searchParams.set("search", state.search);
+      url.searchParams.set("sortBy", state.sortBy);
+      url.searchParams.set("sortOrder", state.sortOrder);
+
+      const response = await fetch(url.toString());
+      const result = await response.json();
+      tbody.innerHTML = "";
+
+      if (result.data.length === 0) {
+        // No records found
+        tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-12 text-center text-slate-400 font-medium">No performance records found.</td></tr>`;
+        if (paginationInfo) paginationInfo.textContent = "0 entries";
+        if (paginationControls) paginationControls.innerHTML = "";
+        return;
+      }
+
+      // Populate table rows with fetched data
+      result.data.forEach((row: any) => {
+        // TODO: Define a proper TypeScript interface for row data instead of using 'any'.
+        const tr = document.createElement("tr");
+        tr.className =
+          "hover:bg-slate-50/40 cursor-pointer transition-colors border-b border-slate-100";
+        tr.addEventListener(
+          "click",
+          () => (window.location.href = `/performances/edit/${row.id}`),
+        );
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 font-semibold text-xs flex items-center justify-center shrink-0 border border-slate-100 shadow-xs uppercase">${getInitials(row.player_name)}</div>
+              <div><h3 class="font-bold text-slate-900">${row.player_name}</h3></div>
+            </div>
+          </td>
+          <td class="px-6 py-4 font-semibold text-slate-700 hidden md:table-cell"><span>${getFlagEmoji(row.team)} ${row.team || "N/A"}</span></td>
+          <td class="px-6 py-4 font-semibold text-slate-700 hidden md:table-cell"><span>${getFlagEmoji(row.opponent_team)} ${row.opponent_team || "N/A"}</span></td>
+          <td class="px-6 py-4 font-medium text-slate-500">${formatDate(row.match_date)}</td>
+          <td class="px-6 py-4 text-center font-medium text-slate-700">${row.minutes_played || 0}</td>
+          <td class="px-6 py-4 text-center font-bold text-slate-900">${row.goals ?? 0}</td>
+          <td class="px-6 py-4 text-center font-semibold text-slate-700">${row.assists ?? 0}</td>
+          <td class="px-6 py-4 text-center font-medium text-slate-500 hidden lg:table-cell">${row.shots ?? 0}</td>
+          <td class="px-6 py-4 text-center"><span class="inline-block px-3 py-1.5 rounded-xl text-xs font-bold border ${getRatingColorClass(parseFloat(row.player_rating || 0))}">${parseFloat(row.player_rating || 0).toFixed(1)}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Calculating and populating pagination info text (e.g., "1-25 of 100") using the current page/limit/total
+      if (paginationInfo)
+        paginationInfo.textContent = `${(state.page - 1) * state.limit + 1}-${Math.min(state.page * state.limit, result.total)} of ${result.total.toLocaleString()}`;
+      renderPaginationButtons(result.total);
+      syncUIStates();
+    } catch (error) {
+      console.error(error);
+      tbody.innerHTML = `<tr><td colspan="11" class="text-center text-rose-500 py-12">Failed to load data.</td></tr>`;
+    }
+  }
+
+  // --- Sincronización Bidireccional UI ---
+  /**
+   * @function syncUIStates
+   * @description Synchronizes the UI elements (table headers, filter modal inputs) with the current state object. Updates sort icons, highlights active sort headers, and sets the selected values in the filter modal.
+   * @returns {void}
+   */
+  function syncUIStates() {
+    // 1. Sincronize table header sort icons and highlight the active sort column
+    document.querySelectorAll("thead th[data-sort]").forEach((header) => {
+      const currentField = header.getAttribute("data-sort");
+      const iconSpan = header.querySelector(".sort-icon");
+      if (iconSpan) {
+        // If the icon span exists, update its content and styling based on the current state
+        if (currentField === state.sortBy) {
+          iconSpan.textContent = state.sortOrder === "ASC" ? "↑" : "↓";
+          header.classList.add("text-blue-600", "font-bold");
+        } else {
+          iconSpan.textContent = "";
+          header.classList.remove("text-blue-600", "font-bold");
+        }
+      }
+    });
+
+    // 2. Sincronize filter modal inputs with the current state values
+    if (filterSortBy) filterSortBy.value = state.sortBy;
+    const activeRadio = document.querySelector(
+      `input[name="sort-order"][value="${state.sortOrder}"]`,
+    ) as HTMLInputElement;
+    if (activeRadio) activeRadio.checked = true;
+  }
+
+  // --- Controladores del Modal de Filtros ---
+  /**
+   * @function toggleFiltersPanel
+   * @description Opens or closes the advanced filters panel with a backdrop
+   * @param open - A boolean indicating whether to open (true) or close (false) the filters panel.
+   * @returns {void}
+   */
+  const toggleFiltersPanel = (open: boolean) => {
+    if (open) {
+      filterBackdrop?.classList.remove("hidden");
+      filterPanel?.classList.remove("translate-x-full");
+      setTimeout(
+        () => filterBackdrop?.classList.replace("opacity-0", "opacity-100"),
+        10,
+      );
+      syncUIStates(); // Sync the filter modal inputs with the current state when opening
+    } else {
+      filterPanel?.classList.add("translate-x-full");
+      filterBackdrop?.classList.replace("opacity-100", "opacity-0");
+      setTimeout(() => filterBackdrop?.classList.add("hidden"), 300);
+    }
+  };
+
+  // > Open & Close Filter Panel Event Listeners
+  openFiltersBtn?.addEventListener("click", () => toggleFiltersPanel(true));
+  closeFiltersBtn?.addEventListener("click", () => toggleFiltersPanel(false));
+  filterBackdrop?.addEventListener("click", () => toggleFiltersPanel(false));
+
+  /**
+   * @function applyFiltersBtn Event Listener
+   * @description Applies the selected filters from the modal, updates the state, and fetches the performances based on the new filters
+   * @returns {void}
+   */
+  applyFiltersBtn?.addEventListener("click", () => {
+    const selectedOrder = document.querySelector(
+      'input[name="sort-order"]:checked',
+    ) as HTMLInputElement;
+    state.sortBy = filterSortBy.value;
+    state.sortOrder = selectedOrder.value as "ASC" | "DESC";
+    state.page = 1;
+    fetchPerformances();
+    toggleFiltersPanel(false);
+  });
+
+  /**
+   * @function resetFiltersBtn Event Listener
+   * @description Resets the filters to their default values, updates the state, and synchronizes the UI elements accordingly
+   * @returns {void}
+   */
+  resetFiltersBtn?.addEventListener("click", () => {
+    state.sortBy = "match_date";
+    state.sortOrder = "DESC";
+    syncUIStates();
+  });
+
+  /**
+   * @function Table Header Click Event Listeners
+   * @description Adds click event listeners to each sortable table header. When a header is clicked
+   * @returns {void}
+   */
+  document.querySelectorAll("thead th[data-sort]").forEach((th) => {
+    th.addEventListener("click", () => {
+      const field = th.getAttribute("data-sort") || "match_date";
+      if (state.sortBy === field)
+        state.sortOrder = state.sortOrder === "ASC" ? "DESC" : "ASC";
+      else {
+        state.sortBy = field;
+        state.sortOrder = "DESC";
+      }
+      state.page = 1;
+      fetchPerformances();
+    });
+  });
+
+  
+  let debounceTimeout: any;
+  /**
+   * @function searchInput Event Listener
+   * @description Adds an input event listener to the search input field. Debounces the input to avoid excessive API calls
+   * @returns {void}
+   */
+  searchInput?.addEventListener("input", (e) => {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+      state.search = (e.target as HTMLInputElement).value.trim();
+      state.page = 1;
+      fetchPerformances();
+    }, 350);
+  });
+
+  /**
+   * @function limitSelect Event Listener
+   * @description Adds a change event listener to the limit select dropdown. Updates the state with the selected limit and fetches performances accordingly
+   * @returns {void}
+   */
+  limitSelect?.addEventListener("change", (e) => {
+    state.limit = parseInt((e.target as HTMLSelectElement).value, 10);
+    state.page = 1;
+    fetchPerformances();
+  });
+
+  /**
+   * @function renderPaginationButtons
+   * @description Renders pagination buttons based on the total number of rows and the current state
+   * @param totalRows - The total number of rows returned from the API
+   * @returns {void}
+   */
+  function renderPaginationButtons(totalRows: number) {
+    if (!paginationControls) return;
+    paginationControls.innerHTML = "";
+    const totalPages = Math.ceil(totalRows / state.limit);
+    if (totalPages <= 1) return;
+
+    /**
+     * @function createBtn
+     * @description Creates a pagination button element with the specified page number, text, disabled state, and active state
+     * Adds an event listener to the button to update the state and fetch performances when clicked
+     * @param pageNum - The page number associated with the button (number or string for ellipsis)
+     * @param text - The text to display on the button (e.g., page number or ellipsis)
+     * @param disabled - A boolean indicating whether the button should be disabled (true) or enabled (false)
+     * @param isActive - A boolean indicating whether the button represents the current active page (true) or not (false)
+     * @returns {HTMLButtonElement} - The created button element
+     */
+    const createBtn = (
+      pageNum: number | string,
+      text: string,
+      disabled = false,
+      isActive = false,
+    ) => {
+      const btn = document.createElement("button");
+      btn.className = `min-w-8 h-8 px-2 flex items-center justify-center rounded-lg text-sm font-semibold transition-all ${isActive ? "bg-[#2563eb] text-white shadow-md shadow-blue-500/15" : disabled ? "text-slate-300 cursor-not-allowed" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"}`;
+      btn.innerHTML = text;
+      if (!disabled && typeof pageNum === "number") {
+        btn.addEventListener("click", () => {
+          state.page = pageNum;
+          fetchPerformances();
+        });
+      }
+      return btn;
+    };
+
+    paginationControls.appendChild( // < Previous Button
+      createBtn(
+        state.page - 1,
+        `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`,
+        state.page === 1, // Disable the button if on the first page
+      ),
+    );
+
+    const pToShow = [];
+    if (totalPages <= 5) for (let i = 1; i <= totalPages; i++) pToShow.push(i); // Show all pages if total pages are 5 or less
+    else if (state.page <= 3) pToShow.push(1, 2, 3, "...", totalPages); // Show first 3 pages and ellipsis if current page is 3 or less
+    else if (state.page >= totalPages - 2)
+      pToShow.push(1, "...", totalPages - 2, totalPages - 1, totalPages); // Show last 3 pages and ellipsis if current page is within the last 3 pages
+    else pToShow.push(1, "...", state.page, "...", totalPages); // Show current page with ellipses on both sides if current page is in the middle
+
+    // Render the page number buttons based on the calculated pages to show from the array
+    pToShow.forEach((p) =>
+      paginationControls.appendChild(
+        p === "..."
+          ? createBtn(0, "...", true) // Render ellipsis button as disabled
+          : createBtn(p as number, p.toString(), false, state.page === p), // Render page number button with active state if it matches the current page
+      ),
+    );
+    paginationControls.appendChild( // > Next Button
+      createBtn(
+        state.page + 1,
+        `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`,
+        state.page === totalPages, // Disable the button if on the last page
+      ),
+    );
+  }
+
+  // Initial fetch of performances when the page loads
+  fetchPerformances();
+</script>
