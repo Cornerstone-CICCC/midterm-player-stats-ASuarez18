@@ -275,7 +275,7 @@ import Layout from "../../layouts/Layout.astro";
         tr.addEventListener("click", (e) => {
           const target = e.target as HTMLElement;
           if (target.closest("a, button")) return; // Si hace click en acciones, ignorar fila
-          window.location.href = `/players/edit?id=${player.player_id}`;
+          window.location.href = `/players/edit/?id=${player.player_id}`;
         });
 
         tr.innerHTML = `
@@ -295,7 +295,7 @@ import Layout from "../../layouts/Layout.astro";
           <td class="px-6 py-4 text-center hidden md:table-cell text-slate-600 font-medium">${player.age || "—"} Yrs</td>
           <td class="px-6 py-4 text-center">
             <div class="flex items-center justify-center gap-2">
-              <a href="/players/edit?id=${player.player_id}" class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 border border-transparent hover:border-blue-100 rounded-xl transition-colors shadow-none hover:shadow-xs">
+              <a href="/players/edit/?id=${player.player_id}" class="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 border border-transparent hover:border-blue-100 rounded-xl transition-colors shadow-none hover:shadow-xs">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                   <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
