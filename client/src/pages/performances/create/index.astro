@@ -377,12 +377,12 @@ import Layout from "../../../layouts/Layout.astro";
   // Get all rating inputs with the data-scale attribute
   const ratingInputs = document.querySelectorAll<HTMLInputElement>('input[data-scale]');
 
-    /**
-     * @function updateInputColor
-     * @description Updates the background and text color of a rating input based on its value and scale.
-     * @param input - The HTMLInputElement whose color needs to be updated.
-     * @returns {void}
-     */
+  /**
+   * @function updateInputColor
+   * @description Updates the background and text color of a rating input based on its value and scale.
+   * @param input - The HTMLInputElement whose color needs to be updated.
+   * @returns {void}
+   */
   function updateInputColor(input: HTMLInputElement) {
     const val = parseFloat(input.value) || 0;
     const scale = input.getAttribute('data-scale');
