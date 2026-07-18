@@ -38,18 +38,25 @@ import Layout from "../../layouts/Layout.astro";
     </div>
   </div>
 
+  <!-- > Rankings Table Container -->
   <div class="bg-white border border-slate-100 rounded-3xl shadow-xs overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full border-collapse text-left text-sm text-slate-600">
         <thead>
-          <tr class="bg-slate-50/75 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400">
+          <tr class="bg-slate-50/75 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400 select-none">
             <th class="px-6 py-4 text-center w-16">Rank</th>
             <th class="px-6 py-4">Player</th>
             <th class="px-6 py-4">Team</th>
             <th class="px-6 py-4 text-center">Matches Played</th>
-            <th id="th-goals" class="px-6 py-4 text-center transition-colors duration-200">Total Goals</th>
-            <th id="th-assists" class="px-6 py-4 text-center transition-colors duration-200">Total Assists</th>
-            <th id="th-rating" class="px-6 py-4 text-center w-32 transition-colors duration-200">Rating</th>
+            <th id="th-goals" class="px-6 py-4 text-center cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors duration-200" data-sort="goals">
+              <div class="flex items-center justify-center gap-1">Total Goals <span class="sort-icon"></span></div>
+            </th>
+            <th id="th-assists" class="px-6 py-4 text-center cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors duration-200" data-sort="assists">
+              <div class="flex items-center justify-center gap-1">Total Assists <span class="sort-icon"></span></div>
+            </th>
+            <th id="th-rating" class="px-6 py-4 text-center w-32 cursor-pointer hover:bg-slate-100/50 hover:text-slate-700 transition-colors duration-200" data-sort="rating">
+              <div class="flex items-center justify-center gap-1">Rating <span class="sort-icon"></span></div>
+            </th>
           </tr>
         </thead>
         <tbody id="rankings-tbody" class="divide-y divide-slate-100/60">
@@ -60,6 +67,10 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  // > --- STATE CONTROL ---
+  let currentSortBy = "goals";
+  let currentSortOrder = "DESC"; // Los rankings por defecto muestran el mayor valor arriba
+
   const sortSelect = document.getElementById("sort-select") as HTMLSelectElement;
   const tbody = document.getElementById("rankings-tbody");
   const errorBanner = document.getElementById("error-banner");
@@ -74,19 +85,9 @@ import Layout from "../../layouts/Layout.astro";
    */
   const getFlagEmoji = (country: string): string => {
     const flags: Record<string, string> = {
-      Spain: "🇪🇸",
-      France: "🇫🇷",
-      Argentina: "🇦🇷",
-      England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-      Portugal: "🇵🇹",
-      Netherlands: "🇳🇱",
-      Germany: "🇩🇪",
-      Brazil: "🇧🇷",
-      Belgium: "🇧🇪",
-      Mexico: "🇲🇽",
-      USA: "🇺🇸",
-      "South Africa": "🇿🇦",
-      Canada: "🇨🇦"
+      Spain: "🇪🇸", France: "🇫🇷", Argentina: "🇦🇷", England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", Portugal: "🇵🇹",
+      Netherlands: "🇳🇱", Germany: "🇩🇪", Brazil: "🇧🇷", Belgium: "🇧🇪", Mexico: "🇲🇽",
+      USA: "🇺🇸", "South Africa": "🇿🇦", Canada: "🇨🇦"
     };
     return flags[country] || "🏳️";
   };
@@ -98,12 +99,7 @@ import Layout from "../../layouts/Layout.astro";
    * @returns The initials of the name in uppercase.
    */
   const getInitials = (name: string): string => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
+    return name ? name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() : "—";
   };
 
   /**
@@ -121,20 +117,31 @@ import Layout from "../../layouts/Layout.astro";
     return "bg-rose-100 text-rose-700 font-bold border border-rose-200";
   };
 
-    /**
+  /**
    * @function updateHeadersHighlight
    * @description Updates the table header styles to highlight the currently selected sorting column.
    * @param sortBy - The criteria by which the rankings are currently sorted (e.g., "goals", "assists", "rating").
    * This function modifies the class names of the header elements to visually indicate which column is active
    */
-  function updateHeadersHighlight(sortBy: string) {
-    const thGoals = document.getElementById("th-goals");
-    const thAssists = document.getElementById("th-assists");
-    const thRating = document.getElementById("th-rating");
+  function updateHeadersHighlight(sortBy: string, sortOrder: string) {
+    document.querySelectorAll("thead th[data-sort]").forEach((header) => {
+      const field = header.getAttribute("data-sort");
+      const iconSpan = header.querySelector(".sort-icon");
+      
+      if (iconSpan) {
+        if (field === sortBy) {
+          iconSpan.textContent = sortOrder === "ASC" ? "↑" : "↓";
+          header.className = `px-6 py-4 text-center cursor-pointer bg-slate-100/40 text-blue-600 font-bold transition-colors duration-200 ${field === 'rating' ? 'w-32' : ''}`;
+        } else {
+          iconSpan.textContent = "";
+          header.className = `px-6 py-4 text-center cursor-pointer hover:bg-slate-100/50 text-slate-400 font-bold transition-colors duration-200 ${field === 'rating' ? 'w-32' : ''}`;
+        }
+      }
+    });
 
-    if (thGoals) thGoals.className = `px-6 py-4 text-center transition-colors duration-200 ${sortBy === "goals" ? "text-blue-600 font-bold" : "text-slate-400"}`;
-    if (thAssists) thAssists.className = `px-6 py-4 text-center transition-colors duration-200 ${sortBy === "assists" ? "text-blue-600 font-bold" : "text-slate-400"}`;
-    if (thRating) thRating.className = `px-6 py-4 text-center w-32 transition-colors duration-200 ${sortBy === "rating" ? "text-blue-600 font-bold" : "text-slate-400"}`;
+    if (sortSelect && sortSelect.value !== sortBy) {
+      sortSelect.value = sortBy;
+    }
   }
 
   /**
@@ -143,10 +150,9 @@ import Layout from "../../layouts/Layout.astro";
    * @param sortBy - The criteria by which to sort the rankings (e.g., "goals", "assists", "rating").
    * @returns {Promise<void>} - A promise that resolves when the rankings have been loaded
    */
-  async function loadRankings(sortBy: string) {
+  async function loadRankings(sortBy: string, sortOrder: string) {
     if (!tbody) return;
 
-    // 1. Show loading spinner while fetching data
     tbody.innerHTML = `
       <tr>
         <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">
@@ -164,12 +170,11 @@ import Layout from "../../layouts/Layout.astro";
     errorBanner?.classList.add("hidden");
 
     try {
-      // 2. Consume the backend API to fetch rankings based on the selected sort criteria
-      const response = await fetch(`http://localhost:3000/api/rankings?sortBy=${sortBy}`);
+      const response = await fetch(`http://localhost:3000/api/rankings?sortBy=${sortBy}&sortOrder=${sortOrder}`);
       if (!response.ok) throw new Error("API returned an error");
       
       const rankings = await response.json();
-      tbody.innerHTML = ""; // Limpiar spinner
+      tbody.innerHTML = "";
 
       if (rankings.length === 0) {
         tbody.innerHTML = `
@@ -182,14 +187,12 @@ import Layout from "../../layouts/Layout.astro";
         return;
       }
 
-      // 3. Render the table rows dynamically based on the fetched data
       rankings.forEach((row: any) => {
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50/40 transition-colors border-b border-slate-100 last:border-0";
 
-        // Emphasis classes for the selected sorting column
-        const goalsStyle = sortBy === "goals" ? "text-blue-600 font-bold text-base" : "text-slate-700";
-        const assistsStyle = sortBy === "assists" ? "text-blue-600 font-bold text-base" : "text-slate-700";
+        const goalsStyle = sortBy === "goals" ? "text-blue-600 font-bold text-base bg-blue-50/20" : "text-slate-700";
+        const assistsStyle = sortBy === "assists" ? "text-blue-600 font-bold text-base bg-blue-50/20" : "text-slate-700";
 
         tr.innerHTML = `
           <td class="px-6 py-4 text-center font-bold text-slate-800">${row.rank}</td>
@@ -199,10 +202,10 @@ import Layout from "../../layouts/Layout.astro";
                 ${getInitials(row.player_name)}
               </div>
               <div>
-                <h3 class="font-bold text-slate-900 leading-tight">${row.player_name}</h3>
+                <h3 class="font-bold text-slate-900 leading-tight">${row.player_name || "—"}</h3>
                 <div class="flex items-center gap-1.5 mt-0.5 text-xs text-slate-400 font-medium md:hidden">
                   <span>${getFlagEmoji(row.team)}</span>
-                  <span>${row.team}</span>
+                  <span>${row.team || "—"}</span>
                 </div>
               </div>
             </div>
@@ -210,27 +213,26 @@ import Layout from "../../layouts/Layout.astro";
           <td class="px-6 py-4 font-semibold text-slate-700 hidden md:table-cell">
             <div class="flex items-center gap-2">
               <span>${getFlagEmoji(row.team)}</span>
-              <span>${row.team}</span>
+              <span>${row.team || "—"}</span>
             </div>
           </td>
-          <td class="px-6 py-4 text-center font-semibold text-slate-700">${row.matches_played}</td>
-          <td class="px-6 py-4 text-center ${goalsStyle}">${row.total_goals}</td>
-          <td class="px-6 py-4 text-center ${assistsStyle}">${row.total_assists}</td>
-          <td class="px-6 py-4 text-center">
-            <span class="inline-block px-3 py-1.5 rounded-xl text-xs ${getRatingColorClass(row.avg_rating)}">
-              ${row.avg_rating.toFixed(2)}
+          <td class="px-6 py-4 text-center font-semibold text-slate-700">${row.matches_played ?? 0}</td>
+          <td class="px-6 py-4 text-center ${goalsStyle}">${row.total_goals ?? 0}</td>
+          <td class="px-6 py-4 text-center ${assistsStyle}">${row.total_assists ?? 0}</td>
+          <td class="px-6 py-4 text-center ${sortBy === 'rating' ? 'bg-blue-50/10' : ''}">
+            <span class="inline-block px-3 py-1.5 rounded-xl text-xs ${getRatingColorClass(row.avg_rating || 0)}">
+              ${typeof row.avg_rating === "number" ? row.avg_rating.toFixed(2) : "0.00"}
             </span>
           </td>
         `;
         tbody.appendChild(tr);
       });
 
-      // 4. Update the header styles to highlight the selected sorting column
-      updateHeadersHighlight(sortBy);
+      updateHeadersHighlight(sortBy, sortOrder);
 
     } catch (error) {
       console.error("Error loading rankings:", error);
-      tbody.innerHTML = "";
+      if (tbody) tbody.innerHTML = "";
       if (errorBanner && errorText) {
         errorBanner.classList.remove("hidden");
         errorText.textContent = "Could not connect to the backend server. Make sure your Express app is running on port 3000.";
@@ -238,15 +240,39 @@ import Layout from "../../layouts/Layout.astro";
     }
   }
 
+  // > --- EVENT LISTENERS  ---
+  /**
+   * @function setupSortingListeners
+   * @description Sets up event listeners for sorting the rankings table by clicking on the table headers or changing the select dropdown
+   */
+  document.querySelectorAll("thead th[data-sort]").forEach((th) => {
+    th.addEventListener("click", () => {
+      const selectedField = th.getAttribute("data-sort") || "goals";
+      
+      if (currentSortBy === selectedField) {
+        currentSortOrder = currentSortOrder === "DESC" ? "ASC" : "DESC";
+      } else {
+        currentSortBy = selectedField;
+        currentSortOrder = "DESC";
+      }
+      
+      loadRankings(currentSortBy, currentSortOrder);
+    });
+  });
 
   if (sortSelect) {
-    // On change event for the sort select dropdown to reload rankings based on the selected criteria
+    /**
+     * @function setupSelectListener
+     * @description Sets up an event listener for the sort select dropdown to change the sorting criteria
+     */
     sortSelect.addEventListener("change", (e) => {
       const target = e.target as HTMLSelectElement;
-      loadRankings(target.value);
+      currentSortBy = target.value;
+      currentSortOrder = "DESC"; // Reset a descendente al cambiar desde select
+      loadRankings(currentSortBy, currentSortOrder);
     });
 
-    // Load initial rankings based on the default selected value when the page loads
-    loadRankings(sortSelect.value);
+    // Initial on page load
+    loadRankings(sortSelect.value, currentSortOrder);
   }
 </script>
