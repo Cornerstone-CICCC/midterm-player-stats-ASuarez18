@@ -3,16 +3,35 @@ import * as MatchesModel from "../models/MatchesModel.ts";
 
 /**
  * @function getMatches
- * @description Obtains all matches from the database and sends them in the response.
- * @param req, @param res 
- * @returns {Promise<void>} A promise that resolves when the response is sent.
+ * @description Obtains matches from the database matching frontend pagination, sorting, and search queries.
+ * @param req - Express Request carrying URL query strings
+ * @param res - Express Response
+ * @returns {Promise<void>}
  */
 export const getMatches = async (req: Request, res: Response) => {
   try {
-    const matches = await MatchesModel.getAll();
-    res.status(200).json(matches);
+    const queryOptions: MatchesModel.GetMatchesOptions = {};
+
+    if (req.query.page) {
+      queryOptions.page = parseInt(req.query.page as string, 10);
+    }
+    if (req.query.limit) {
+      queryOptions.limit = parseInt(req.query.limit as string, 10);
+    }
+    if (req.query.search) {
+      queryOptions.search = (req.query.search as string).trim();
+    }
+    if (req.query.sortBy) {
+      queryOptions.sortBy = req.query.sortBy as string;
+    }
+    if (req.query.sortOrder === "ASC" || req.query.sortOrder === "DESC") {
+      queryOptions.sortOrder = req.query.sortOrder;
+    }
+
+    const result = await MatchesModel.getAll(queryOptions);
+    res.status(200).json(result);
   } catch (error) {
-    console.error("Error in getMatches:", error);
+    console.error("Error in getMatches controller pipeline:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
