@@ -12,19 +12,69 @@ const ALLOWED_MATCH_COLUMNS = [
   "tournament_stage"
 ];
 
+export type GetMatchesOptions = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export type PaginatedMatches = {
+  data: Match[];
+  total: number;
+}
+
 /**
  * @function getAll
- * @description Obtains all matches from the database, ordered by match date in ascending order.
- * @returns {Promise<Match[]>} A promise that resolves to an array of Match objects.
+ * @description Obtains matches with support for dynamic sorting, search filtering, and pagination.
+ *              If no options are provided, it returns a flat array (dropdowns).
+ * @param {GetMatchesOptions} [options] - Pagination, search, and sorting rules
+ * @returns {Promise<Match[] | PaginatedMatches>} - Array of matches or Paginated structure
  */
-export async function getAll(): Promise<Match[]> {
-  const query = `
-    SELECT match_id, match_date, stadium, city, tournament_stage 
-    FROM matches 
-    ORDER BY match_date ASC
+export async function getAll(options?: GetMatchesOptions): Promise<Match[] | PaginatedMatches> {
+  const page = options?.page ? parseInt(options.page as any, 10) : null;
+  const limit = options?.limit ? parseInt(options.limit as any, 10) : null;
+  const search = options?.search ? options.search.trim() : "";
+  const sortBy = options?.sortBy || "match_date";
+  const sortOrder = options?.sortOrder === "ASC" ? "ASC" : "DESC"; // Default de partidos: más antiguos a más recientes
+
+  // Validar columna de ordenado contra la lista blanca para evitar SQL Injection
+  const validatedSortBy = ALLOWED_MATCH_COLUMNS.includes(sortBy) ? sortBy : "match_date";
+
+  let query = `
+    SELECT *, COUNT(*) OVER() as total_count
+    FROM matches
   `;
-  const { rows } = await pool.query(query);
-  return rows;
+  
+  const values: any[] = [];
+
+  if (search) {
+    query += ` WHERE stadium ILIKE $1 OR city ILIKE $1 OR tournament_stage ILIKE $1 `;
+    values.push(`%${search}%`);
+  }
+
+  query += ` ORDER BY ${validatedSortBy} ${sortOrder} `;
+
+  if (limit && page) {
+    const offset = (page - 1) * limit;
+    const limitPlaceholder = `$${values.length + 1}`;
+    const offsetPlaceholder = `$${values.length + 2}`;
+    
+    query += ` LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder} `;
+    values.push(limit, offset);
+  }
+
+  const { rows } = await pool.query(query, values);
+
+  if (!limit || !page) {
+    return rows.map(({ total_count, ...match }) => match as Match);
+  }
+
+  const total = rows.length > 0 ? parseInt(rows[0].total_count, 10) : 0;
+  const data = rows.map(({ total_count, ...match }) => match as Match);
+
+  return { data, total };
 }
 
 /**
