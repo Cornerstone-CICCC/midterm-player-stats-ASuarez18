@@ -11,7 +11,7 @@ export const pool = new Pool({
   password: process.env.DB_PASSWORD || "",
   host: process.env.DB_HOST || "localhost",
   port: Number(process.env.DB_PORT) || 5432,
-  database: process.env.DB_DATABASE || "player_performance",
+  database: process.env.DB_DATABASE || "worldcup",
 });
 
 pool.on("error", (err) => {
