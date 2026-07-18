@@ -3,16 +3,36 @@ import * as PlayersModel from "../models/PlayersModel.ts";
 
 /**
  * @function getPlayers
- * @description Obtains all players from the database and sends them in the response.
- * @param req, @param res 
- * @returns {Promise<void>} A promise that resolves when the response is sent.
+ * @description Obtains players from the database matching the frontend search, sorting, and pagination parameters.
+ * @param req - Express Request carrying URL query strings
+ * @param res - Express Response
+ * @returns {Promise<void>}
  */
 export const getPlayers = async (req: Request, res: Response) => {
   try {
-    const players = await PlayersModel.getAll();
-    res.status(200).json(players);
+    const queryOptions: PlayersModel.GetPlayersOptions = {};
+
+    if (req.query.page) {
+      queryOptions.page = parseInt(req.query.page as string, 10);
+    }
+    if (req.query.limit) {
+      queryOptions.limit = parseInt(req.query.limit as string, 10);
+    }
+    if (req.query.search) {
+      queryOptions.search = (req.query.search as string).trim();
+    }
+    if (req.query.sortBy) {
+      queryOptions.sortBy = req.query.sortBy as string;
+    }
+    if (req.query.sortOrder === "ASC" || req.query.sortOrder === "DESC") {
+      queryOptions.sortOrder = req.query.sortOrder;
+    }
+
+    const result = await PlayersModel.getAll(queryOptions);
+    
+    res.status(200).json(result);
   } catch (error) {
-    console.error("Error in getPlayers:", error);
+    console.error("Error in getPlayers controller pipeline:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
