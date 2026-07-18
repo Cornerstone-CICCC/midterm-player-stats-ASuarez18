@@ -7,7 +7,7 @@ import Layout from "../../layouts/Layout.astro";
   <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
     <div>
       <h2 class="text-3xl font-bold tracking-tight text-slate-900">Matches Schedule</h2>
-      <p class="text-slate-500 mt-1">View, query, and manage the official tournament fixtures and stadiums.</p>
+      <p class="text-slate-500 mt-1">View, query, and manage the official tournament details and stadiums.</p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
@@ -65,7 +65,7 @@ import Layout from "../../layouts/Layout.astro";
     </div>
     <div>
       <h4 class="font-bold">Backend Connection Error</h4>
-      <p id="error-text" class="text-sm text-rose-600/90 mt-1">Failed to gather tournament fixtures data from core server directory.</p>
+      <p id="error-text" class="text-sm text-rose-600/90 mt-1">Failed to gather tournament details data from core server directory.</p>
     </div>
   </div>
 
@@ -86,7 +86,7 @@ import Layout from "../../layouts/Layout.astro";
     </div>
 
     <div class="flex items-center gap-4 self-end sm:self-auto">
-      <span id="pagination-info" class="text-xs sm:text-sm text-slate-500 font-medium">Loading match fixtures...</span>
+      <span id="pagination-info" class="text-xs sm:text-sm text-slate-500 font-medium">Loading match details...</span>
       <div id="pagination-controls" class="flex items-center gap-1.5"></div>
     </div>
   </div>

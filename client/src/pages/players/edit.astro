@@ -325,7 +325,7 @@ import Layout from "../../layouts/Layout.astro";
     });
   });
 
-  // > --- LOAD PERFORMANCE DATA FETCH ---
+  // > --- LOAD PLAYERS DATA FETCH ---
   /**
    * @function loadPlayerProfileData
    * @description Fetches the player profile data from the server and populates the form fields
@@ -466,8 +466,8 @@ import Layout from "../../layouts/Layout.astro";
   });
 
   /**
-   * @function confirmDeletePerformance
-   * @description Confirms the deletion of the performance record and sends a DELETE request to the API
+   * @function confirmDeletePlayerProfile
+   * @description Confirms the deletion of the player profile and sends a DELETE request to the API
    * @returns {Promise<void>}
    */
   modalConfirmBtn?.addEventListener("click", async () => {

@@ -1,0 +1,345 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Edit Match Details">
+  <!-- > HEADER -->
+  <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <a href="/matches" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Matches
+      </a>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-900">Edit Match Details</h2>
+    </div>
+
+    <!-- - Delete Match Button -->
+    <button
+      type="button"
+      id="delete-btn"
+      class="inline-flex items-center justify-center gap-2 border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 font-semibold py-2.5 px-5 rounded-xl text-sm transition-all shadow-xs self-start sm:self-center cursor-pointer"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      </svg>
+      Delete Details
+    </button>
+  </div>
+
+  <!-- > NOTIFICATION TOAST -->
+  <div id="notification-banner" class="hidden p-4 mb-6 rounded-xl flex items-center gap-3 shadow-xs text-sm font-semibold transition-all">
+    <svg id="notification-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"></svg>
+    <span id="notification-text"></span>
+  </div>
+
+  <!-- > LOADING CONTEXT SKELETON -->
+  <div id="loading-context-skeleton" class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs mb-6 animate-pulse flex items-center justify-center py-12 text-slate-400 font-medium">
+    Loading match details record...
+  </div>
+
+  <form id="edit-match-form" class="hidden space-y-6 pb-28">
+    
+    <!-- > 1. Match Details -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+      <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Match Details
+      </h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- - Match ID (Disabled) -->
+        <div class="flex flex-col gap-1.5 md:col-span-1">
+          <label for="match_id_disabled" class="text-xs font-semibold text-slate-500">Match Token ID</label>
+          <input type="text" id="match_id_disabled" disabled class="w-full bg-slate-50 border border-slate-200 py-2 px-3 rounded-lg text-sm font-bold text-slate-400 font-mono cursor-not-allowed" />
+        </div>
+
+        <!-- - Match Date -->
+        <div class="flex flex-col gap-1.5 md:col-span-3">
+          <label for="match_date" class="text-xs font-semibold text-slate-600">Date & Time <span class="text-rose-500">*</span></label>
+          <input type="datetime-local" id="match_date" name="match_date" required class="w-full border border-slate-200 py-2 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+        </div>
+      </div>
+    </div>
+
+    <!-- > 2. LOCATION & TOURNAMENT STAGE -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+      <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        Logistics & Tournament Stage
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- - Match Stadium -->
+        <div class="flex flex-col gap-1.5">
+          <label for="stadium" class="text-xs font-semibold text-slate-600">Stadium <span class="text-rose-500">*</span></label>
+          <input type="text" id="stadium" name="stadium" required placeholder="e.g. Lumen Field" class="w-full border border-slate-200 py-2 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+        </div>
+
+        <!-- - Match City -->
+        <div class="flex flex-col gap-1.5">
+          <label for="city" class="text-xs font-semibold text-slate-600">Host City <span class="text-rose-500">*</span></label>
+          <input type="text" id="city" name="city" required placeholder="e.g. Seattle" class="w-full border border-slate-200 py-2 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700" />
+        </div>
+
+        <!-- - Match Stage -->
+        <div class="flex flex-col gap-1.5">
+          <label for="tournament_stage" class="text-xs font-semibold text-slate-600">Tournament Stage <span class="text-rose-500">*</span></label>
+          <select id="tournament_stage" name="tournament_stage" required class="w-full border border-slate-200 py-2.5 px-3 rounded-lg text-sm font-semibold focus:border-blue-500 focus:outline-hidden text-slate-700 cursor-pointer">
+            <option value="Group Stage">Group Stage</option>
+            <option value="Round of 32">Round of 32</option>
+            <option value="Round of 16">Round of 16</option>
+            <option value="Quarter-finals">Quarter-finals</option>
+            <option value="Semi-finals">Semi-finals</option>
+            <option value="Third place play-off">Third place play-off</option>
+            <option value="Final">Final</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- > 3. ACTION BUTTONS -->
+    <div class="fixed bottom-0 left-0 md:left-64 right-0 bg-white border-t border-slate-200 p-4 px-6 flex justify-end gap-3 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <button type="button" onclick="window.history.back()" class="px-6 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
+        Cancel
+      </button>
+      <button type="submit" id="submit-btn" class="px-8 py-2.5 text-sm font-semibold text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2 cursor-pointer">
+        Update Match Details
+      </button>
+    </div>
+  </form>
+
+  <!-- > DELETE CONFIRMATION MODAL -->
+  <div id="delete-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"></div>
+
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+      <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg p-6 space-y-4 border border-slate-100">
+        <div class="flex items-center gap-3 text-rose-600">
+          <div class="p-2 rounded-xl bg-rose-50 border border-rose-100 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900" id="modal-title">Delete Match Details</h3>
+        </div>
+        
+        <p class="text-sm text-slate-500 font-medium leading-relaxed">
+          Are you sure you want to permanently delete this match details? If this match has performance records indexed to players, the database will block this deletion to preserve historical analytics.
+        </p>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" id="modal-cancel-btn" class="px-4 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">
+            Cancel
+          </button>
+          <button type="button" id="modal-confirm-btn" class="px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md shadow-rose-500/20 transition-colors cursor-pointer">
+            Delete Permanently
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // > --- DOM ELEMENTS ---
+  const form = document.getElementById("edit-match-form") as HTMLFormElement;
+  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+  const deleteBtn = document.getElementById("delete-btn") as HTMLButtonElement;
+
+  // > --- MODAL ELEMENTS ---
+  const deleteModal = document.getElementById("delete-modal") as HTMLDivElement;
+  const modalCancelBtn = document.getElementById("modal-cancel-btn") as HTMLButtonElement;
+  const modalConfirmBtn = document.getElementById("modal-confirm-btn") as HTMLButtonElement;
+
+  // > --- CONTEXT ELEMENTS ---
+  const loadingSkeleton = document.getElementById("loading-context-skeleton");
+
+  const banner = document.getElementById("notification-banner");
+  const bannerText = document.getElementById("notification-text");
+  const bannerIcon = document.getElementById("notification-icon");
+
+  // > --- URL PARAMS ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const matchId = urlParams.get("id");
+
+  if (!matchId) {
+    window.location.href = "/matches";
+  }
+
+  /**
+   * @function showNotification
+   * @description Displays a notification banner with a message and an icon indicating success or error.
+   * @param message - The message to display in the notification banner.
+   * @param isError - A boolean indicating whether the notification is an error (true) or success (false).
+   * @returns {void}
+   */
+  const showNotification = (message: string, isError: boolean) => {
+    if (!banner || !bannerText || !bannerIcon) return;
+    
+    banner.className = `p-4 mb-6 rounded-xl flex items-center gap-3 shadow-xs text-sm font-semibold transition-all ${isError ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-green-50 text-green-700 border border-green-200'}`;
+    bannerText.textContent = message;
+    bannerIcon.innerHTML = isError 
+      ? '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>' 
+      : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
+    banner.classList.remove("hidden");
+
+    const mainContainer = document.querySelector("main");
+    if (mainContainer) {
+      mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // > --- LOAD MATCH DATA FETCH ---
+  async function loadMatchDetailsData() {
+    try {
+      const response = await fetch(`http://localhost:3000/api/matches/${matchId}`);
+      
+      if (!response.ok) {
+        throw new Error("The requested match registry entry does not exist or has been modified.");
+      }
+      
+      const data = await response.json();
+
+      // Configure the disabled input for player ID
+      const disabledIdInput = document.getElementById("match_id_disabled") as HTMLInputElement;
+      if (disabledIdInput) disabledIdInput.value = data.match_id;
+
+      // Prefill form fields with fetched data
+      Object.keys(data).forEach(field => {
+        const input = form.querySelector(`[name="${field}"]`) as HTMLInputElement | HTMLSelectElement;
+        if (input) {
+          if (field === "match_date" && data[field]) {
+            const dateObj = new Date(data[field]);
+            const localizedDate = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000)
+              .toISOString()
+              .slice(0, 16);
+            input.value = localizedDate;
+          } else {
+            input.value = data[field];
+          }
+        }
+      });
+
+      // Hide loading skeleton and show metadata card after data is loaded
+      loadingSkeleton?.classList.add("hidden");
+      form?.classList.remove("hidden");
+
+    } catch (error: any) {
+      showNotification(`${error.message} Redirecting to index...`, true);
+      setTimeout(() => { window.location.href = "/matches"; }, 2500);
+    }
+  }
+
+  // > --- FORM SUBMISSION HANDLER ---
+  /**
+   * @function handleFormSubmit
+   * @description Handles the form submission for updating player data
+   * @param e - The submit event object
+   * @returns {Promise<void>}
+   */
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `Updating Details...`;
+
+    const formData = new FormData(form);
+    const payload: Record<string, any> = {};
+    
+    for (const [key, value] of formData.entries()) {
+      if (value !== "") {
+        if (key === "match_date") {
+          payload[key] = new Date(value as string).toISOString();
+        } else {
+          payload[key] = value;
+        }
+      }
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/matches/${matchId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || "Failed to sync structural changes to database node.");
+      }
+
+      showNotification("Match details updated and re-indexed successfully!", false);
+      setTimeout(() => { window.location.href = "/matches"; }, 1500);
+
+    } catch (error: any) {
+      console.error(error);
+      showNotification(error.message + '\n' + error.details, true);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = "Update Match details";
+    }
+  });
+
+  // > --- DELETE PERFORMANCE HANDLER ---
+  /**
+   * @function openDeleteModal
+   * @description Opens the delete confirmation modal when the delete button is clicked
+   */
+  deleteBtn?.addEventListener("click", () => deleteModal?.classList.remove("hidden"));
+
+  /**
+   * @function closeDeleteModalOnOverlay
+   * @description Closes the delete confirmation modal when the user clicks anywhere on the dark overlay background
+   */
+  modalCancelBtn?.addEventListener("click", () => deleteModal?.classList.add("hidden"));
+
+  /**
+   * @function closeDeleteModalOnOverlay
+   * @description Closes the delete confirmation modal when the user clicks anywhere on the dark overlay background
+   */
+  deleteModal?.addEventListener("click", (e) => {
+    if (!(e.target as HTMLElement).closest(".bg-white")) {
+      deleteModal.classList.add("hidden");
+    }
+  });
+
+  /**
+   * @function confirmDeleteMatch
+   * @description Confirms the deletion of the match record and sends a DELETE request to the API
+   * @returns {Promise<void>}
+   */
+  modalConfirmBtn?.addEventListener("click", async () => {
+    modalConfirmBtn.disabled = true;
+    modalConfirmBtn.innerHTML = "Dropping...";
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/matches/${matchId}`, {
+        method: "DELETE"
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Integrity conflict: Denied dropping due to cascading relational data.");
+      }
+
+      deleteModal?.classList.add("hidden");
+      showNotification("Match details successfully purged from system logs.", false);
+      setTimeout(() => { window.location.href = "/matches"; }, 1500);
+
+    } catch (error: any) {
+      console.error(error);
+      deleteModal?.classList.add("hidden"); 
+      showNotification(error.message + '\n' + error.details, true);
+      modalConfirmBtn.disabled = false;
+      modalConfirmBtn.innerHTML = "Delete Permanently";
+    }
+  });
+
+  // On page load, fetch and populate the match data
+  loadMatchDetailsData();
+</script>

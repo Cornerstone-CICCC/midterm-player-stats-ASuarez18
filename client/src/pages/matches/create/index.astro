@@ -2,7 +2,7 @@
 import Layout from "../../../layouts/Layout.astro";
 ---
 
-<Layout title="Add Match Fixture">
+<Layout title="Add Match Details">
   <!-- > HEADER -->
   <div class="mb-6">
     <a href="/matches" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors mb-4">
@@ -13,7 +13,7 @@ import Layout from "../../../layouts/Layout.astro";
       Back to Matches
     </a>
     <div class="flex items-center justify-between">
-      <h2 class="text-2xl font-bold tracking-tight text-slate-900">Add Match Fixture</h2>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-900">Add Match Details</h2>
     </div>
   </div>
 
@@ -90,7 +90,7 @@ import Layout from "../../../layouts/Layout.astro";
         Cancel
       </button>
       <button type="submit" id="submit-btn" class="px-8 py-2.5 text-sm font-semibold text-white bg-[#2563eb] hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2 cursor-pointer">
-        Save Match Fixture
+        Save Match Details
       </button>
     </div>
   </form>
@@ -140,7 +140,7 @@ import Layout from "../../../layouts/Layout.astro";
     e.preventDefault();
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `Saving Fixture...`;
+    submitBtn.innerHTML = `Saving Details...`;
 
     const formData = new FormData(form);
     const payload: Record<string, any> = {};
@@ -165,17 +165,17 @@ import Layout from "../../../layouts/Layout.astro";
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.details || errorData.error || "Failed to catalog new match fixture details.");
+        throw new Error(errorData.details || errorData.error || "Failed to catalog new match details details.");
       }
 
-      showNotification("Match fixture created and indexed successfully!", false);
+      showNotification("Match details created and indexed successfully!", false);
       setTimeout(() => { window.location.href = "/matches"; }, 2000);
 
     } catch (error: any) {
       console.error(error);
       showNotification(error.message, true);
       submitBtn.disabled = false;
-      submitBtn.innerHTML = "Save Match Fixture";
+      submitBtn.innerHTML = "Save Match Details";
     }
   });
 </script>
