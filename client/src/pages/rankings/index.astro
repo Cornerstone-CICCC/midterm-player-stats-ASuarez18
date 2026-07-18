@@ -67,6 +67,8 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { getInitials, getFlagEmoji } from "../../utils/helpers.ts";
+
   // > --- STATE CONTROL ---
   let currentSortBy = "goals";
   let currentSortOrder = "DESC"; // Los rankings por defecto muestran el mayor valor arriba
@@ -75,32 +77,6 @@ import Layout from "../../layouts/Layout.astro";
   const tbody = document.getElementById("rankings-tbody");
   const errorBanner = document.getElementById("error-banner");
   const errorText = document.getElementById("error-text");
-
-  /** 
-   * @function getFlagEmoji
-   * @description Returns the flag emoji for a given country name. If the country is not found, returns a default white flag.
-   * @param {string} country - The name of the country.
-   * @returns {string} - The corresponding flag emoji or a default white flag.
-   * TODO: Search API that gets all country flags and their emojis, so we don't have to hardcode them here.
-   */
-  const getFlagEmoji = (country: string): string => {
-    const flags: Record<string, string> = {
-      Spain: "🇪🇸", France: "🇫🇷", Argentina: "🇦🇷", England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", Portugal: "🇵🇹",
-      Netherlands: "🇳🇱", Germany: "🇩🇪", Brazil: "🇧🇷", Belgium: "🇧🇪", Mexico: "🇲🇽",
-      USA: "🇺🇸", "South Africa": "🇿🇦", Canada: "🇨🇦"
-    };
-    return flags[country] || "🏳️";
-  };
-
-  /**
-   * @function getInitials
-   * @description Returns the initials of a given name. For PFP of players without images.
-   * @param name - The full name of the player.
-   * @returns The initials of the name in uppercase.
-   */
-  const getInitials = (name: string): string => {
-    return name ? name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() : "—";
-  };
 
   /**
    * @function getRatingColorClass

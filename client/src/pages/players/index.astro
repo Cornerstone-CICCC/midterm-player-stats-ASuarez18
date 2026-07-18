@@ -184,6 +184,8 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { getInitials, getFlagEmoji } from "../../utils/helpers.ts";
+
   // > --- GLOBAL STATE ---
   let state = {
     page: 1,
@@ -210,27 +212,6 @@ import Layout from "../../layouts/Layout.astro";
   const filterSortBy = document.getElementById("filter-sort-by") as HTMLSelectElement;
   const applyFiltersBtn = document.getElementById("apply-filters-btn");
   const resetFiltersBtn = document.getElementById("reset-filters-btn");
-
-  // > --- Aesthetic Utility Functions ---
-  // TODO: Refactor to utils.ts and import them for reusability across components.
-  /**
-   * @function getFlagEmoji
-   * @description Returns the corresponding flag emoji for a given country name.
-   * @param country - The name of the country (e.g., "Spain", "France").
-   * @returns The flag emoji as a string, or a white flag if the country is
-   * TODO: Add an API call to fetch flags dynamically instead of hardcoding them.
-   */
-  const getFlagEmoji = (country: string): string => {
-    const flags: Record<string, string> = {
-      Spain: "🇪🇸", France: "🇫🇷", Argentina: "🇦🇷", England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", Portugal: "🇵🇹", 
-      Netherlands: "🇳🇱", Germany: "🇩🇪", Brazil: "🇧🇷", Belgium: "🇧🇪", Mexico: "🇲🇽", 
-      USA: "🇺🇸", "South Africa": "🇿🇦", Canada: "🇨🇦", Australia: "🇦🇺", Iraq: "🇮🇶"
-    };
-    return flags[country] || "🏳️";
-  };
-
-  const getInitials = (name: string): string =>
-    name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
 
   /**
    * @function fetchPlayers

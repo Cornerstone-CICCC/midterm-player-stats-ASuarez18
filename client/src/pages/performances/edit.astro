@@ -344,6 +344,8 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
+  import { formatDate, getInitials, getFlagEmoji } from "../../utils/helpers.ts";
+
   // > --- DOM ELEMENTS ---
   const form = document.getElementById("edit-performance-form") as HTMLFormElement;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
@@ -381,41 +383,7 @@ import Layout from "../../layouts/Layout.astro";
   if (!performanceId) {
     window.location.href = "/";
   }
-
-  // > --- HELPER FUNCTIONS ---
-  // TODO: Refactor to utils.ts and import them for reusability across components.
-  /**
-   * @function getFlagEmoji
-   * @description Returns the corresponding flag emoji for a given country name.
-   * @param country - The name of the country (e.g., "Spain", "France").
-   * @returns The flag emoji as a string, or a white flag if the country is
-   * TODO: Add an API call to fetch flags dynamically instead of hardcoding them.
-   */
-  const getFlagEmoji = (country: string): string => {
-    const flags: Record<string, string> = {
-      Spain: "🇪🇸", France: "🇫🇷", Argentina: "🇦🇷", England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", Portugal: "🇵🇹", 
-      Netherlands: "🇳🇱", Germany: "🇩🇪", Brazil: "🇧🇷", Belgium: "🇧🇪", Mexico: "🇲🇽", 
-      USA: "🇺🇸", "South Africa": "🇿🇦", Canada: "🇨🇦", Australia: "🇦🇺", Iraq: "🇮🇶"
-    };
-    return flags[country] || "🏳️";
-  };
-
-  /**
-   * @function getInitials
-   * @description Returns the initials of a given name. For PFP of players without images.
-   * @param name - The full name of the player.
-   * @returns The initials of the name in uppercase.
-   */
-  const getInitials = (name: string): string => name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
   
-  /**
-   * @function formatDate
-   * @description Formats a date string into "DD MMM YYYY" format (e.g., "25 Dec 2023").
-   * @param dateStr - The date string to format (e.g., "2023-12-25").
-   * @returns The formatted date string.
-   */
-  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-
   /**
    * @function showNotification
    * @description Displays a notification banner with a message and an icon indicating success or error.
