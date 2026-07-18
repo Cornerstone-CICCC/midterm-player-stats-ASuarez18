@@ -3,7 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 ---
 
 <Layout title="Tournament Roster & Players">
-  <!-- CABECERA Y HERRAMIENTAS (Buscador, Filtros, Agregar) -->
+  <!-- > Header and buttons for searching/filter/adding -->
   <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
     <div>
       <h2 class="text-3xl font-bold tracking-tight text-slate-900">Players Directory</h2>
@@ -11,7 +11,7 @@ import Layout from "../../layouts/Layout.astro";
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
-      <!-- Input de Búsqueda -->
+      <!-- - Search bar -->
       <div class="relative w-full sm:w-64 md:w-72">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -27,7 +27,7 @@ import Layout from "../../layouts/Layout.astro";
         />
       </div>
 
-      <!-- Botón de Filtros Avanzados -->
+      <!-- - Filters -->
       <button
         id="open-filters-btn"
         class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-slate-700 font-semibold py-2.5 px-4 rounded-xl text-sm shadow-xs transition-all"
@@ -38,7 +38,7 @@ import Layout from "../../layouts/Layout.astro";
         Filters
       </button>
 
-      <!-- Botón Crear Jugador -->
+      <!-- - Create Player anchor -->
       <a
         href="/players/create"
         class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#2563eb] hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl text-sm shadow-md shadow-blue-500/10 hover:shadow-lg transition-all"
@@ -54,7 +54,7 @@ import Layout from "../../layouts/Layout.astro";
     </div>
   </div>
 
-  <!-- BANNER DE ERROR DE CONEXIÓN -->
+  <!-- > Backend Error Banner -->
   <div id="error-banner" class="hidden bg-rose-50 border border-rose-100 text-rose-700 p-6 rounded-2xl items-center gap-4 shadow-xs mb-6">
     <div class="bg-rose-100 p-3 rounded-xl text-rose-600 shrink-0">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -69,7 +69,7 @@ import Layout from "../../layouts/Layout.astro";
     </div>
   </div>
 
-  <!-- CONTROL DE PAGINACIÓN Y LÍMITES -->
+  <!-- > Entries limit & pagination -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div class="flex items-center gap-2 text-sm text-slate-500 font-medium">
       <span>Show</span>
@@ -91,7 +91,7 @@ import Layout from "../../layouts/Layout.astro";
     </div>
   </div>
 
-  <!-- TABLA DE JUGADORES REGISTRADOS -->
+  <!-- > Player table -->
   <div class="bg-white border border-slate-100 rounded-3xl shadow-xs overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full border-collapse text-left text-sm text-slate-600">
@@ -121,10 +121,10 @@ import Layout from "../../layouts/Layout.astro";
     </div>
   </div>
 
-  <!-- OVERLAY / BACKDROP PARA FILTROS DESLIZANTES -->
+  <!-- > Backdrop for advanced filters  -->
   <div id="filter-backdrop" class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 hidden opacity-0 transition-opacity duration-300"></div>
 
-  <!-- PANEL DE FILTROS AVANZADOS DESLIZANTE -->
+  <!-- > Advanced Filter panel -->
   <div id="filter-panel" class="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
     <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
       <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
@@ -184,7 +184,7 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
-  // --- ESTADO GLOBAL DE JUGADORES ---
+  // > --- GLOBAL STATE ---
   let state = {
     page: 1,
     limit: 25,
@@ -193,7 +193,7 @@ import Layout from "../../layouts/Layout.astro";
     sortOrder: "ASC" as "ASC" | "DESC",
   };
 
-  // --- REFERENCIAS ELEMENTOS DEL DOM ---
+  // > --- General Element References ---
   const tbody = document.getElementById("players-tbody");
   const searchInput = document.getElementById("search-input") as HTMLInputElement;
   const limitSelect = document.getElementById("limit-select") as HTMLSelectElement;
@@ -202,7 +202,7 @@ import Layout from "../../layouts/Layout.astro";
   const errorBanner = document.getElementById("error-banner");
   const errorText = document.getElementById("error-text");
 
-  // Elementos de Filtros Deslizantes
+  // > --- Filter Modal Element References ---
   const openFiltersBtn = document.getElementById("open-filters-btn");
   const closeFiltersBtn = document.getElementById("close-filters-btn");
   const filterBackdrop = document.getElementById("filter-backdrop");
@@ -211,7 +211,15 @@ import Layout from "../../layouts/Layout.astro";
   const applyFiltersBtn = document.getElementById("apply-filters-btn");
   const resetFiltersBtn = document.getElementById("reset-filters-btn");
 
-  // --- UTILERÍAS VISUALES ---
+  // > --- Aesthetic Utility Functions ---
+  // TODO: Refactor to utils.ts and import them for reusability across components.
+  /**
+   * @function getFlagEmoji
+   * @description Returns the corresponding flag emoji for a given country name.
+   * @param country - The name of the country (e.g., "Spain", "France").
+   * @returns The flag emoji as a string, or a white flag if the country is
+   * TODO: Add an API call to fetch flags dynamically instead of hardcoding them.
+   */
   const getFlagEmoji = (country: string): string => {
     const flags: Record<string, string> = {
       Spain: "🇪🇸", France: "🇫🇷", Argentina: "🇦🇷", England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", Portugal: "🇵🇹", 
@@ -224,11 +232,14 @@ import Layout from "../../layouts/Layout.astro";
   const getInitials = (name: string): string =>
     name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
 
-  // --- CONEXIÓN API Y RENDERIZADO DE TABLA ---
+  /**
+   * @function fetchPlayers
+   * @description Fetches players from the backend API with current state parameters (pagination, search, sorting) and updates the table body accordingly
+   * @returns {Promise<void>}
+   */
   async function fetchPlayers() {
     if (!tbody) return;
 
-    // Spinner de carga reactivo dentro del cuerpo
     tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium"><div class="flex items-center justify-center gap-3"><svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Loading roster data...</span></div></td></tr>`;
     errorBanner?.classList.add("hidden");
 
@@ -246,7 +257,7 @@ import Layout from "../../layouts/Layout.astro";
       const result = await response.json();
       tbody.innerHTML = "";
 
-      // Si la API devuelve un arreglo directo en vez de paginado, creamos un fallback estructural compatible
+      // Fallback 
       const data = result.data !== undefined ? result.data : result;
       const total = result.total !== undefined ? result.total : data.length;
 
@@ -261,7 +272,6 @@ import Layout from "../../layouts/Layout.astro";
         const tr = document.createElement("tr");
         tr.className = "hover:bg-slate-50/40 cursor-pointer transition-colors border-b border-slate-100/60";
         
-        // Redirección por clic en fila usando Query Parameters estructurales
         tr.addEventListener("click", (e) => {
           const target = e.target as HTMLElement;
           if (target.closest("a, button")) return; // Si hace click en acciones, ignorar fila
@@ -311,30 +321,37 @@ import Layout from "../../layouts/Layout.astro";
     }
   }
 
-  // --- SINCRONIZACIÓN DE COMPONENTES INTERNOS ---
+  /**
+   * @function syncUIStates
+   * @description Synchronizes the UI elements (table headers, filter modal inputs) with the current state object. Updates sort icons, highlights active sort headers, and sets the selected values in the filter modal.
+   * @returns {void}
+   */
   function syncUIStates() {
-    // Sincronizar iconos de las cabeceras de la tabla
     document.querySelectorAll("thead th[data-sort]").forEach((header) => {
-      const field = header.getAttribute("data-sort");
-      const icon = header.querySelector(".sort-icon");
-      if (icon) {
-        if (field === state.sortBy) {
-          icon.textContent = state.sortOrder === "ASC" ? "↑" : "↓";
+      const currentField = header.getAttribute("data-sort");
+      const iconSpan = header.querySelector(".sort-icon");
+      if (iconSpan) {
+        if (currentField === state.sortBy) {
+          iconSpan.textContent = state.sortOrder === "ASC" ? "↑" : "↓";
           header.classList.add("text-blue-600", "font-bold");
         } else {
-          icon.textContent = "";
+          iconSpan.textContent = "";
           header.classList.remove("text-blue-600", "font-bold");
         }
       }
     });
 
-    // Sincronizar los campos internos de la tarjeta deslizante de filtros
     if (filterSortBy) filterSortBy.value = state.sortBy;
     const radio = document.querySelector(`input[name="sort-order"][value="${state.sortOrder}"]`) as HTMLInputElement;
     if (radio) radio.checked = true;
   }
 
-  // --- CONTROL GESTIÓN PANEL FILTROS ---
+  /**
+   * @function toggleFiltersPanel
+   * @description Opens or closes the advanced filters panel with a backdrop
+   * @param open - A boolean indicating whether to open (true) or close (false) the filters panel.
+   * @returns {void}
+   */
   const toggleFiltersPanel = (open: boolean) => {
     if (open) {
       filterBackdrop?.classList.remove("hidden");
@@ -348,26 +365,41 @@ import Layout from "../../layouts/Layout.astro";
     }
   };
 
+  // > Open & Close Filter Panel Event Listeners
   openFiltersBtn?.addEventListener("click", () => toggleFiltersPanel(true));
   closeFiltersBtn?.addEventListener("click", () => toggleFiltersPanel(false));
   filterBackdrop?.addEventListener("click", () => toggleFiltersPanel(false));
 
+  /**
+   * @function applyFiltersBtn Event Listener
+   * @description Applies the selected filters from the modal, updates the state, and fetches the performances based on the new filters
+   * @returns {void}
+   */
   applyFiltersBtn?.addEventListener("click", () => {
-    const radioChecked = document.querySelector('input[name="sort-order"]:checked') as HTMLInputElement;
+    const selectedOrder = document.querySelector('input[name="sort-order"]:checked') as HTMLInputElement;
     state.sortBy = filterSortBy.value;
-    state.sortOrder = radioChecked.value as "ASC" | "DESC";
+    state.sortOrder = selectedOrder.value as "ASC" | "DESC";
     state.page = 1;
     fetchPlayers();
     toggleFiltersPanel(false);
   });
 
+  /**
+   * @function resetFiltersBtn Event Listener
+   * @description Resets the filters to their default values, updates the state, and synchronizes the UI elements accordingly
+   * @returns {void}
+   */
   resetFiltersBtn?.addEventListener("click", () => {
     state.sortBy = "player_name";
     state.sortOrder = "ASC";
     syncUIStates();
   });
 
-  // --- ESCUCHADORES DE CLICS EN CABECERAS PARA ORDENADO ---
+  /**
+   * @function Table Header Click Event Listeners
+   * @description Adds click event listeners to each sortable table header. When a header is clicked
+   * @returns {void}
+   */
   document.querySelectorAll("thead th[data-sort]").forEach((th) => {
     th.addEventListener("click", () => {
       const field = th.getAttribute("data-sort") || "player_name";
@@ -382,8 +414,12 @@ import Layout from "../../layouts/Layout.astro";
     });
   });
 
-  // --- DEBOUNCE CAPTURA BUSCADOR ---
   let debounceTimeout: any;
+  /**
+   * @function searchInput Event Listener
+   * @description Adds an input event listener to the search input field. Debounces the input to avoid excessive API calls
+   * @returns {void}
+   */
   searchInput?.addEventListener("input", (e) => {
     clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => {
@@ -393,20 +429,39 @@ import Layout from "../../layouts/Layout.astro";
     }, 350);
   });
 
-  // --- SELECTOR DE RANGO DE FILAS ---
+  /**
+   * @function limitSelect Event Listener
+   * @description Adds a change event listener to the limit select dropdown. Updates the state with the selected limit and fetches performances accordingly
+   * @returns {void}
+   */
   limitSelect?.addEventListener("change", (e) => {
     state.limit = parseInt((e.target as HTMLSelectElement).value, 10);
     state.page = 1;
     fetchPlayers();
   });
 
-  // --- RENDERIZADOR COMPLETO DE BOTONES PAGINACIÓN ---
+  /**
+   * @function renderPaginationButtons
+   * @description Renders pagination buttons based on the total number of rows and the current state
+   * @param totalRows - The total number of rows returned from the API
+   * @returns {void}
+   */
   function renderPaginationButtons(totalRows: number) {
     if (!paginationControls) return;
     paginationControls.innerHTML = "";
     const totalPages = Math.ceil(totalRows / state.limit);
     if (totalPages <= 1) return;
 
+    /**
+     * @function createBtn
+     * @description Creates a pagination button element with the specified page number, text, disabled state, and active state
+     * Adds an event listener to the button to update the state and fetch performances when clicked
+     * @param pageNum - The page number associated with the button (number or string for ellipsis)
+     * @param text - The text to display on the button (e.g., page number or ellipsis)
+     * @param disabled - A boolean indicating whether the button should be disabled (true) or enabled (false)
+     * @param isActive - A boolean indicating whether the button represents the current active page (true) or not (false)
+     * @returns {HTMLButtonElement} - The created button element
+     */
     const createBtn = (pageNum: number | string, text: string, disabled = false, isActive = false) => {
       const btn = document.createElement("button");
       btn.className = `min-w-8 h-8 px-2 flex items-center justify-center rounded-lg text-sm font-semibold transition-all ${isActive ? "bg-[#2563eb] text-white shadow-md shadow-blue-500/15" : disabled ? "text-slate-300 cursor-not-allowed" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"}`;
@@ -420,34 +475,29 @@ import Layout from "../../layouts/Layout.astro";
       return btn;
     };
 
-    // Botón Atrás
-    paginationControls.appendChild(
+    paginationControls.appendChild( // Previous Button <
       createBtn(state.page - 1, `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`, state.page === 1)
     );
 
-    const pages = [];
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else if (state.page <= 3) {
-      pages.push(1, 2, 3, "...", totalPages);
-    } else if (state.page >= totalPages - 2) {
-      pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
-    } else {
-      pages.push(1, "...", state.page, "...", totalPages);
-    }
+    const pToShow = [];
+    if (totalPages <= 5) for (let i = 1; i <= totalPages; i++) pToShow.push(i); // Show all pages if total pages are 5 or less
+    else if (state.page <= 3) pToShow.push(1, 2, 3, "...", totalPages); // Show first 3 pages and ellipsis if current page is 3 or less
+    else if (state.page >= totalPages - 2)
+      pToShow.push(1, "...", totalPages - 2, totalPages - 1, totalPages); // Show last 3 pages and ellipsis if current page is within the last 3 pages
+    else pToShow.push(1, "...", state.page, "...", totalPages); // Show current page with ellipses on both sides if current page is in the middle
 
-    pages.forEach((p) =>
+    // Render the page number buttons based on the calculated pages to show from the array
+    pToShow.forEach((p) =>
       paginationControls.appendChild(
         p === "..." ? createBtn(0, "...", true) : createBtn(p as number, p.toString(), false, state.page === p)
       )
     );
 
-    // Botón Siguiente
-    paginationControls.appendChild(
+    paginationControls.appendChild( // Next Button >
       createBtn(state.page + 1, `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`, state.page === totalPages)
     );
   }
 
-  // Carga inicial
+  // Initial fetch of performances when the page loads
   fetchPlayers();
 </script>
