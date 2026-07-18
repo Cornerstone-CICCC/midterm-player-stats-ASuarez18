@@ -67,11 +67,10 @@ import Layout from "../../layouts/Layout.astro";
 </Layout>
 
 <script>
-  import { getInitials, getFlagEmoji } from "../../utils/helpers.ts";
+  import { getInitials, getFlagEmoji, getRatingColorClass } from "../../utils/helpers.ts";
 
   // > --- STATE CONTROL ---
   let currentSortBy = "goals";
-  let currentSortOrder = "DESC"; // Los rankings por defecto muestran el mayor valor arriba
 
   const sortSelect = document.getElementById("sort-select") as HTMLSelectElement;
   const tbody = document.getElementById("rankings-tbody");
@@ -79,34 +78,20 @@ import Layout from "../../layouts/Layout.astro";
   const errorText = document.getElementById("error-text");
 
   /**
-   * @function getRatingColorClass
-   * @description Returns a Tailwind CSS class string based on the player's rating.
-   * @param rating - The average rating of the player.
-   * @returns A string containing Tailwind CSS classes for background color, text color, font weight, and border based on the rating.
-   * - Green for ratings >= 7.5
-   * - Amber for ratings >= 6.5 and < 7.5
-   * - Rose for ratings < 6.5
-   */
-  const getRatingColorClass = (rating: number): string => {
-    if (rating >= 7.5) return "bg-green-100 text-green-700 font-bold border border-green-200";
-    if (rating >= 6.5) return "bg-amber-100 text-amber-700 font-bold border border-amber-200";
-    return "bg-rose-100 text-rose-700 font-bold border border-rose-200";
-  };
-
-  /**
    * @function updateHeadersHighlight
    * @description Updates the table header styles to highlight the currently selected sorting column.
    * @param sortBy - The criteria by which the rankings are currently sorted (e.g., "goals", "assists", "rating").
    * This function modifies the class names of the header elements to visually indicate which column is active
    */
-  function updateHeadersHighlight(sortBy: string, sortOrder: string) {
+  function updateHeadersHighlight(sortBy: string) {
     document.querySelectorAll("thead th[data-sort]").forEach((header) => {
       const field = header.getAttribute("data-sort");
       const iconSpan = header.querySelector(".sort-icon");
       
       if (iconSpan) {
         if (field === sortBy) {
-          iconSpan.textContent = sortOrder === "ASC" ? "↑" : "↓";
+          // El orden siempre va de mayor a menor en un ranking
+          iconSpan.textContent = "↓";
           header.className = `px-6 py-4 text-center cursor-pointer bg-slate-100/40 text-blue-600 font-bold transition-colors duration-200 ${field === 'rating' ? 'w-32' : ''}`;
         } else {
           iconSpan.textContent = "";
@@ -126,7 +111,7 @@ import Layout from "../../layouts/Layout.astro";
    * @param sortBy - The criteria by which to sort the rankings (e.g., "goals", "assists", "rating").
    * @returns {Promise<void>} - A promise that resolves when the rankings have been loaded
    */
-  async function loadRankings(sortBy: string, sortOrder: string) {
+  async function loadRankings(sortBy: string) {
     if (!tbody) return;
 
     tbody.innerHTML = `
@@ -146,7 +131,8 @@ import Layout from "../../layouts/Layout.astro";
     errorBanner?.classList.add("hidden");
 
     try {
-      const response = await fetch(`http://localhost:3000/api/rankings?sortBy=${sortBy}&sortOrder=${sortOrder}`);
+      // Se remueve el parámetro sortOrder ya que el backend maneja el DESC de forma nativa por consistencia de negocio
+      const response = await fetch(`http://localhost:3000/api/rankings?sortBy=${sortBy}`);
       if (!response.ok) throw new Error("API returned an error");
       
       const rankings = await response.json();
@@ -204,7 +190,7 @@ import Layout from "../../layouts/Layout.astro";
         tbody.appendChild(tr);
       });
 
-      updateHeadersHighlight(sortBy, sortOrder);
+      updateHeadersHighlight(sortBy);
 
     } catch (error) {
       console.error("Error loading rankings:", error);
@@ -216,7 +202,7 @@ import Layout from "../../layouts/Layout.astro";
     }
   }
 
-  // > --- EVENT LISTENERS  ---
+  // > --- EVENT LISTENERS   ---
   /**
    * @function setupSortingListeners
    * @description Sets up event listeners for sorting the rankings table by clicking on the table headers or changing the select dropdown
@@ -225,14 +211,9 @@ import Layout from "../../layouts/Layout.astro";
     th.addEventListener("click", () => {
       const selectedField = th.getAttribute("data-sort") || "goals";
       
-      if (currentSortBy === selectedField) {
-        currentSortOrder = currentSortOrder === "DESC" ? "ASC" : "DESC";
-      } else {
-        currentSortBy = selectedField;
-        currentSortOrder = "DESC";
-      }
-      
-      loadRankings(currentSortBy, currentSortOrder);
+      // Cambiar de métrica, el orden siempre se congela de forma descendente (DESC)
+      currentSortBy = selectedField;
+      loadRankings(currentSortBy);
     });
   });
 
@@ -244,11 +225,10 @@ import Layout from "../../layouts/Layout.astro";
     sortSelect.addEventListener("change", (e) => {
       const target = e.target as HTMLSelectElement;
       currentSortBy = target.value;
-      currentSortOrder = "DESC"; // Reset a descendente al cambiar desde select
-      loadRankings(currentSortBy, currentSortOrder);
+      loadRankings(currentSortBy);
     });
 
     // Initial on page load
-    loadRankings(sortSelect.value, currentSortOrder);
+    loadRankings(sortSelect.value);
   }
 </script>

@@ -15,7 +15,7 @@ export const getFlagEmoji = (country: string): string => {
     // Europe (UEFA)
     spain: "ES",
     france: "FR",
-    england: "GB", 
+    england: "GB",
     portugal: "PT",
     netherlands: "NL",
     germany: "DE",
@@ -63,18 +63,20 @@ export const getFlagEmoji = (country: string): string => {
     "saudi arabia": "SA",
     iraq: "IQ",
     qatar: "QA",
-    "new zealand": "NZ"
+    "new zealand": "NZ",
   };
 
   // 1. Obtain the ISO code from the country name or use the provided ISO code directly
   const cleanInput = country.trim().toLowerCase();
-  const isoCode = countryToISO[cleanInput] || (country.length === 2 ? country.toUpperCase() : null);
+  const isoCode =
+    countryToISO[cleanInput] ||
+    (country.length === 2 ? country.toUpperCase() : null);
 
   if (!isoCode) return "🏳️";
 
   // 2. Algorithm to convert ISO code to flag emoji
   return String.fromCodePoint(
-    ...Array.from(isoCode).map((char) => char.charCodeAt(0) + 127397)
+    ...Array.from(isoCode).map((char) => char.charCodeAt(0) + 127397),
   );
 };
 
@@ -104,3 +106,20 @@ export const formatDate = (dateStr: string): string =>
     month: "short",
     year: "numeric",
   });
+
+/**
+ * @function getRatingColorClass
+ * @description Returns a Tailwind CSS class string based on the player's rating.
+ * @param rating - The average rating of the player.
+ * @returns A string containing Tailwind CSS classes for background color, text color, font weight, and border based on the rating.
+ * - Green for ratings >= 7.5
+ * - Amber for ratings >= 6.5 and < 7.5
+ * - Rose for ratings < 6.5
+ */
+export const getRatingColorClass = (rating: number): string => {
+  if (rating >= 7.5)
+    return "bg-green-100 text-green-700 font-bold border border-green-200";
+  if (rating >= 6.5)
+    return "bg-amber-100 text-amber-700 font-bold border border-amber-200";
+  return "bg-rose-100 text-rose-700 font-bold border border-rose-200";
+};

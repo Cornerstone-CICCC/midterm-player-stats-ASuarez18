@@ -368,7 +368,7 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <script>
-  import { formatDate, getInitials, getFlagEmoji } from "../utils/helpers.ts";
+  import { formatDate, getInitials, getFlagEmoji, getRatingColorClass } from "../utils/helpers.ts";
 
   // > --- Global state for pagination, search, and sorting ---
   let state = {
@@ -400,23 +400,6 @@ import Layout from "../layouts/Layout.astro";
   ) as HTMLSelectElement;
   const applyFiltersBtn = document.getElementById("apply-filters-btn");
   const resetFiltersBtn = document.getElementById("reset-filters-btn");
-
-  // > --- HELPER Functions ---
-  /**
-   * @function getRatingColorClass
-   * @description Returns a Tailwind CSS class string based on the player's rating.
-   * @param rating - The average rating of the player.
-   * @returns A string containing Tailwind CSS classes for background color, text color, font weight, and border based on the rating.
-   * - Green for ratings >= 7.5
-   * - Amber for ratings >= 6.5 and < 7.5
-   * - Rose for ratings < 6.5
-   */
-  const getRatingColorClass = (rating: number): string =>
-    rating >= 7.5
-      ? "bg-green-100 text-green-700 border-green-200"
-      : rating >= 6.5
-        ? "bg-amber-100 text-amber-700 border-amber-200"
-        : "bg-rose-100 text-rose-700 border-rose-200";
 
   // > --- Data Fetch and Load ---
   async function fetchPerformances() {
